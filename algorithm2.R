@@ -5,13 +5,22 @@ c=matrix(rnorm(40,mean=1,sd=1),nrow=20,ncol=2)
 #X=matrix(c(a,b,c))
 X=rbind(a,b,c)
 N=dim(X)[1];D=dim(X)[2]
-K=101
+M_max=4
+num_min=2
+wgss_list=list()
+wgss_penalty_old=Inf
+for (K in 1:M_max) {
 if (N <= K) {
     stop("Input dimension error!")
-} 
+}
+#test
+#penalty=log(N)
+penalty=0
+#test
 if (K==1) {
     changePoints = N
-    wgss=var(x)*(N-1)
+    num_each=N
+    wgss=var(X)*(N-1)
     if (N==1) {
         wgss=matrix(0,nrow=1,ncol=D)
     }
@@ -172,7 +181,16 @@ if (K==1) {
     }
     wgss=colSums(wgss_each)
 }
-wgss_sum=sum(wgss)
-traceback()
+if (min(num_each)<num_min) {
+    break
+}
+wgss_sum_new=sum(wgss)
+wgss_list=c(wgss_list,wgss_sum_new)
+wgss_penalty_new=wgss_sum_new+K*penalty
+if (wgss_penalty_new<wgss_penalty_old) {
+    wgss_penalty_old=wgss_penalty_new
+    changePoints_optimal=changePoints
+}
+}
 
-#debug: wgss_each contains negative number
+traceback()
