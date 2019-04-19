@@ -26,7 +26,7 @@ PeakRange=function(score,tolerance=1,M_max=4) {
                     J[[num]]=c(J[[num]],i)
                 }
             }
-     
+
         }
         if (num<=M_max) {
             break

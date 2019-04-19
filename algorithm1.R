@@ -1,12 +1,12 @@
 #test
 set.seed(5701)
-N = 2000
+N = 1000
 N1 = floor(0.1*N)
 N2 = floor(0.3*N)
 L = 2
-a1 = c(0.8, -0.3); c1 = 0
-a2 = c(-0.5, 0.1); c2 = 0
-a3 = c(0.5, -0.5); c3 = 0
+a1 = c(0.8, -0.3); c1 = 1
+a2 = c(-0.5, 0.1); c2 = 2
+a3 = c(0.5, -0.5); c3 = 3
 x = rep(0,N)
 x[1:L] = rnorm(L)
 
@@ -21,13 +21,14 @@ for (n in (L+1):N){
         x[n] = x[(n-1):(n-L)] %*% a3 + c3 + rnorm(1)
     }
 }
-windowSizes = c(300, 250, 200, 150, 100, 50)
-MultiWindow(x,windowSizes=c(300, 250, 200, 150, 100, 50),M_max=4,penalty=log(N),num_min=1,n_init=3,tolerance=1)
+windowSizes = c(100, 50, 20,10)
+MultiWindow(x,windowSizes=c(100, 50, 20,10),M_max=4,penalty=log(N),num_min=1,n_init=3,tolerance=1)
 #test
 
 MultiWindow=function(x,windowSizes=c(300, 250, 200, 150, 100, 50),M_max=4,penalty=log(N),num_min=1,n_init=3,tolerance=1) {
     N=length(x)
     nWindowType = length(windowSizes)
+    #initialize score matrix
     score=matrix(0,nrow=N,ncol=nWindowType)
     for (r in 1:nWindowType) {
         #test
@@ -39,7 +40,9 @@ MultiWindow=function(x,windowSizes=c(300, 250, 200, 150, 100, 50),M_max=4,penalt
             #test
             #n=1
             #test
+            #get estimated coefficients including constant
             est=estimate_ar(x,1+(n-1)*windowSize,min(n*windowSize,N),L)
+            #transform original data to transformed data which is the estimated coefficients
             if (n==1) {
                 x_transformed=t(est$C)
             } else {
@@ -68,6 +71,7 @@ T1=1+(k-1)*windowSize
 T2=min(k*windowSize,N)
 L=2
 #test
+
 estimate_ar=function(y,T1,T2,L){
     if (T1>(T2-L)) {
         warning("Error in estimate_ar")
@@ -91,5 +95,34 @@ estimate_ar=function(y,T1,T2,L){
 #test
 k=1
 #test
-est=estimate_ar(x,1+(k-1)*windowSize,min(k*windowSize,N),L)
+windowSize=
+for (k in 1:K) {
+    est=estimate_ar(x,1+(k-1)*windowSize,min(k*windowSize,N),L)
+}
 
+windowSize=50
+nWindow = ceiling(N/windowSize)
+for (n in 1:nWindow) {
+    #test
+    #n=1
+    #test
+    #get estimated coefficients including constant
+    est=estimate_ar(x,1+(n-1)*windowSize,min(n*windowSize,N),L)
+    #transform original data to transformed data which is the estimated coefficients
+    if (n==1) {
+        x_transformed=t(est$C)
+    } else {
+        x_transformed=rbind(x_transformed,t(est$C))
+    }
+    if (n==1) {
+        sigma=t(est$sigma2)
+    } else {
+        sigma=rbind(sigma,t(est$sigma2))
+    }
+}
+wgss=matrix(0,nrow=)
+for (k in 1:k_M) {
+    print(k)
+    print(apply(x_transformed[],2,var))
+}
+setwd("D:/")

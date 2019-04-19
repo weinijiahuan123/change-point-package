@@ -1,7 +1,7 @@
 set.seed(5701)
-a=matrix(rnorm(40,mean=-1,sd=1),nrow=20,ncol=2)
+a=matrix(rnorm(40,mean=-2,sd=1),nrow=20,ncol=2)
 b=matrix(rnorm(120,mean=0,sd=1),nrow=60,ncol=2)
-c=matrix(rnorm(40,mean=1,sd=1),nrow=20,ncol=2)
+c=matrix(rnorm(40,mean=2,sd=1),nrow=20,ncol=2)
 #X=matrix(c(a,b,c))
 X=rbind(a,b,c)
 N=dim(X)[1];D=dim(X)[2]
@@ -47,21 +47,21 @@ OrderKmeans=function(X,M_max=4,penalty=log(N),num_min=2,n_init=3){
             changePoints=floor(1+(N-2)*runif(K-1))
             changePoints=c(changePoints,N)
             changePoints=unique(changePoints)
-            
+
             while (length(changePoints)<K) {
                 changePoints=c(changePoints,floor(1+(N-2)*runif(1)))
                 changePoints=unique(changePoints)
             }
-            
+
             changePoints = sort(changePoints)
-            
-            num_each[1] = changePoints[1] 
+
+            num_each[1] = changePoints[1]
             wgss_each[1,] = apply(matrix(X[1:changePoints[1],],ncol=D),2,var) * (num_each[1]-1)
             if (num_each[1]==1) {
                 wgss_each[1,]=matrix(0,nrow=1,ncol=D)
             }
             mean_each[1,] = apply(matrix(X[1:changePoints[1],],ncol=D),2,mean)
-            
+
             for (i in 2:K) {
                 num_each[i] = changePoints[i] - changePoints[i-1]
                 # segment 1 only has one number with var NA
@@ -69,10 +69,10 @@ OrderKmeans=function(X,M_max=4,penalty=log(N),num_min=2,n_init=3){
                 if (num_each[i]==1) {
                     wgss_each[i,]=matrix(0,nrow=1,ncol=D)
                 }
-                mean_each[i,] = apply(matrix(X[(changePoints[i-1]+1):changePoints[i],],ncol=D),2,mean) 
-                
+                mean_each[i,] = apply(matrix(X[(changePoints[i-1]+1):changePoints[i],],ncol=D),2,mean)
+
             }
-            
+
             iter=0; move=1; maxIter = N
             while ((move==1) & (iter < maxIter)) {
                 move=0
@@ -82,25 +82,25 @@ OrderKmeans=function(X,M_max=4,penalty=log(N),num_min=2,n_init=3){
                 #cat("iter=",iter,"\n")
                 #test
                 for (i in 1:(K-1)) {
-                    #test 
+                    #test
                     #cat("i=",i,"\n")
                     #cat("num_each=",num_each,"\n")
                     #cat("num_each[i]=",num_each[i],"\n")
                     #test
                     best_gain_sum=-Inf
                     if (num_each[i]>1) {
-                        
-                        for (ell in 1:(num_each[i]-1)) { 
+
+                        for (ell in 1:(num_each[i]-1)) {
                             #test
                             #cat("ell=",ell,"\n")
                             #test
-                            
+
                             mean_candidatePart=apply(matrix(X[(changePoints[i]-ell+1):changePoints[i],],ncol=D),2,mean)
-                            
-                            decrease=ell*num_each[i]/(num_each[i]-ell)*(mean_each[i,]-mean_candidatePart)^2 
+
+                            decrease=ell*num_each[i]/(num_each[i]-ell)*(mean_each[i,]-mean_candidatePart)^2
                             increase=ell*num_each[i+1]/(num_each[i+1]+ell)*(mean_each[i+1,]-mean_candidatePart)^2
-                     
-                            if ( sum(decrease) - sum(increase) > best_gain_sum) { 
+
+                            if ( sum(decrease) - sum(increase) > best_gain_sum) {
                                 #test
                                 #cat("decrease=",sum(decrease),"\n")
                                 #cat("increase=",sum(increase),"\n")
@@ -108,7 +108,7 @@ OrderKmeans=function(X,M_max=4,penalty=log(N),num_min=2,n_init=3){
                                 best_gain = decrease - increase
                                 best_gain_sum = sum(best_gain)
                                 best_ell = ell
-                                best_candidatePart = matrix(X[(changePoints[i]-ell+1):changePoints[i],],ncol=D) 
+                                best_candidatePart = matrix(X[(changePoints[i]-ell+1):changePoints[i],],ncol=D)
                                 #test
                                 #cat("best_candidatePart=",best_candidatePart,"\n")
                                 #cat("best_ell =",best_ell,"\n")
@@ -124,14 +124,14 @@ OrderKmeans=function(X,M_max=4,penalty=log(N),num_min=2,n_init=3){
                         #test
                         move = 1
                         best_mean_candidatePart = apply(best_candidatePart,2,mean)
-                        mean_each[i,] = (num_each[i]*mean_each[i,]-best_ell*best_mean_candidatePart)/(num_each[i]-best_ell) 
-                        mean_each[i+1,] = (num_each[i+1]*mean_each[i+1,]+best_ell*best_mean_candidatePart)/(num_each[i+1]+best_ell) 
+                        mean_each[i,] = (num_each[i]*mean_each[i,]-best_ell*best_mean_candidatePart)/(num_each[i]-best_ell)
+                        mean_each[i+1,] = (num_each[i+1]*mean_each[i+1,]+best_ell*best_mean_candidatePart)/(num_each[i+1]+best_ell)
                         changePoints[i] = changePoints[i] - best_ell
                         num_each[i] = num_each[i] - best_ell
                         num_each[i+1] = num_each[i+1] + best_ell
                         wgss_part = apply((best_candidatePart - matrix(best_mean_candidatePart,nrow=best_ell,ncol=D,byrow=TRUE))^2,2,sum)
                         wgss_each[i,] = wgss_each[i,] - best_decrease - wgss_part
-                        wgss_each[i+1,] = wgss_each[i+1,] + best_increase + wgss_part  
+                        wgss_each[i+1,] = wgss_each[i+1,] + best_increase + wgss_part
                         #test
                         #cat("changePoints[i]",changePoints[i],"\n")
                         #cat("num_each[i] =",num_each[i],"\n")
@@ -139,19 +139,19 @@ OrderKmeans=function(X,M_max=4,penalty=log(N),num_min=2,n_init=3){
                         #test
                     } else {
                         best_gain_sum=-Inf
-                        #test 
+                        #test
                         #cat("num_each[i+1]=",num_each[i+1],"\n")
                         #test
                         if (num_each[i+1]>1) {
-                            for (ell in 1:(num_each[i+1]-1)) { 
+                            for (ell in 1:(num_each[i+1]-1)) {
                                 #test
                                 #cat("ell=",ell,"\n")
                                 #test
                                 mean_candidatePart=apply(matrix(X[(changePoints[i]+1):(changePoints[i]+ell),],ncol=D),2,mean)
-                                
-                                decrease=ell*num_each[i+1]/(num_each[i+1]-ell)*(mean_each[i+1,]-mean_candidatePart)^2 
-                                increase=ell*num_each[i]/(num_each[i]+ell)*(mean_each[i,]-mean_candidatePart)^2 
-                                if ( sum(decrease) - sum(increase) > best_gain_sum) { 
+
+                                decrease=ell*num_each[i+1]/(num_each[i+1]-ell)*(mean_each[i+1,]-mean_candidatePart)^2
+                                increase=ell*num_each[i]/(num_each[i]+ell)*(mean_each[i,]-mean_candidatePart)^2
+                                if ( sum(decrease) - sum(increase) > best_gain_sum) {
                                     #test
                                     #cat("decrease=",sum(decrease),"\n")
                                     #cat("increase=",sum(increase),"\n")
@@ -159,7 +159,7 @@ OrderKmeans=function(X,M_max=4,penalty=log(N),num_min=2,n_init=3){
                                     best_gain = decrease - increase
                                     best_gain_sum = sum(best_gain)
                                     best_ell = ell
-                                    best_candidatePart = matrix(X[(changePoints[i]+1):(changePoints[i]+ell),],ncol=D) 
+                                    best_candidatePart = matrix(X[(changePoints[i]+1):(changePoints[i]+ell),],ncol=D)
                                     #test
                                     #cat("best_candidatePart=",best_candidatePart,"\n")
                                     #cat("best_ell =",best_ell,"\n")
@@ -175,14 +175,14 @@ OrderKmeans=function(X,M_max=4,penalty=log(N),num_min=2,n_init=3){
                             #test
                             move = 1
                             best_mean_candidatePart = apply(best_candidatePart,2,mean)
-                            mean_each[i+1,] = (num_each[i+1]*mean_each[i+1,]-best_ell*best_mean_candidatePart)/(num_each[i+1]-best_ell) 
-                            mean_each[i,] = (num_each[i]*mean_each[i,]+best_ell*best_mean_candidatePart)/(num_each[i]+best_ell) 
+                            mean_each[i+1,] = (num_each[i+1]*mean_each[i+1,]-best_ell*best_mean_candidatePart)/(num_each[i+1]-best_ell)
+                            mean_each[i,] = (num_each[i]*mean_each[i,]+best_ell*best_mean_candidatePart)/(num_each[i]+best_ell)
                             changePoints[i] = changePoints[i] + best_ell
                             num_each[i] = num_each[i] + best_ell
                             num_each[i+1] = num_each[i+1] - best_ell
                             wgss_part = apply((best_candidatePart - matrix(best_mean_candidatePart,nrow=best_ell,ncol=D,byrow=TRUE))^2,2,sum)
                             wgss_each[i,] = wgss_each[i,] + best_decrease + wgss_part
-                            wgss_each[i+1,] = wgss_each[i+1,] - best_increase - wgss_part  
+                            wgss_each[i+1,] = wgss_each[i+1,] - best_increase - wgss_part
                             #test
                             #cat("changePoints[i]",changePoints[i],"\n")
                             #cat("num_each[i] =",num_each[i],"\n")
@@ -197,21 +197,27 @@ OrderKmeans=function(X,M_max=4,penalty=log(N),num_min=2,n_init=3){
             }
             wgss=colSums(wgss_each)
         }
+        #if size of the smallest segment is less than minimal segment size, end the loop
+        #and try next changepoint number
         if (min(num_each)<num_min) {
             break
         }
+        #get the within segment sum of residual plus penalty
         wgss_sum_new=sum(wgss)
         wgss_list=c(wgss_list,wgss_sum_new)
         wgss_penalty_new=wgss_sum_new+K*penalty
         #test
         #print(penalty)
         #test
+        #if the new wgss plus penalty is smaller than the previous one, store the new value,
+        #get the smallest wgss among different changepoint numbers
         if (wgss_penalty_new<best_wgss_penalty) {
             best_wgss_penalty=wgss_penalty_new
             best_changePoints=changePoints
             best_num=K
         }
     }
+    #store the smallest wgss among all iterations
     if (global_wgss>best_wgss_penalty) {
         global_wgss=best_wgss_penalty
         global_changePoints=best_changePoints
