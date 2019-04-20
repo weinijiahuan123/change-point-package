@@ -1,0 +1,103 @@
+#' Multi-window Change Points Detection
+#'
+#' Use a sequence of window sizes to capture ranges of change points.
+#'
+#' Given time series data x1,x2...xN, a sequence of window sizes w1 > ... > wR
+#' can be used to capture any true segment of small size. For each wr, the
+#' original data is turned into a sequence of L + 1 dimensional data that can
+#' be approximated as independent. Then the change points of independent data
+#' can be detected by minimizing penalized quadratic loss. By further
+#' mapping these change points back to the original scale, several short ranges
+#' (each of size 2wr) that “probably” contain the desired change points are
+#' obtained. After repeating the above procedure for different wr,
+#' the detected ranges of change points from each window size are scored
+#' by one. The scores are aggregated, and the ranges with highest score or
+#' around the highest score (determined by the tolerance parameter) are
+#' finally selected.
+#'
+#' @references
+#' J. Ding, Y. Xiang, L. Shen, and V. Tarokh, \emph{Multiple Change Point Analysis:
+#' Fast Implementation and Strong Consistency}. IEEE Transactions on Signal
+#' Processing, vol. 65, no. 17, pp. 4495-4510, 2017.
+#' @param x The original data to find change points. Must be one dimensional data
+#' @param window_list The list of window sizes, must be in form c(100,50,20,10,5),
+#'         in descending order and each window_size > 2L.
+#' @param point_max The largest candidate number of change points.
+#' @param L Lag order of the dataset. L>=1
+#' @param penalty Penalty term. Default is BIC, must be in form penalty=expression(.)
+#'                example: penalty=expression(log(log(dim(x_transformed)[1]))).
+#' @param seg_min Minimal segment size, must be positive integer.
+#' @param num_init The number of repetition times, in order to avoid local minimal.
+#'                 Default is squared root of number of transformed data.
+#'                 must be in form num_init=expression(.),
+#'                 example: num_init=expression(2*sqrt(dim(x_transformed)[1])).
+#' @param tolerance The tolerance level. The selected narrow ranges are with score at least S-tolerance.
+#' @param method Character string giving the method used to estimate coefficients. Default is ols (ordinal least squares).
+#'
+#' @return A list of following elements:
+#'         n_peak_range: The number of peak ranges.
+#'         peak_ranges: The location of peak ranges.
+#' @export
+#' @examples
+#' N = 1000
+#' N1 = floor(0.1*N)
+#' N2 = floor(0.3*N)
+#' a1 = c(0.8, -0.3); c1 = 0
+#' a2 = c(-0.5, 0.1); c2 = 0
+#' a3 = c(0.5, -0.5); c3 = 0
+#' x = rep(0,N)
+#' L=2
+#' x[1:L] = rnorm(L)
+#' for (n in (L+1):N){
+#'   if (n <= N1) {
+#'     x[n] = x[(n-1):(n-L)] %*% a1 + c1 + rnorm(1)
+#'   } else if (n <= (N1+N2)) {
+#'     x[n] = x[(n-1):(n-L)] %*% a2 + c2 + rnorm(1)
+#'   }
+#'   else {
+#'     x[n] = x[(n-1):(n-L)] %*% a3 + c3 + rnorm(1)
+#'   }
+#' }
+#' MultiWindow(x,window_list=c(100,50,20,10,5),point_max=4,L=2,seg_min=1,tolerance=1, method="ols")
+MultiWindow=function(x,window_list=c(100,50,20,10,5),point_max=5,L=2,penalty=expression(log(dim(x_transformed)[1])),seg_min=1,num_init=expression(sqrt(dim(x_transformed)[1])),tolerance=1, method="ols") {
+    len=length(x)
+    n_window_type = length(window_list)
+    #initialize score matrix
+    score=matrix(0,nrow=len,ncol=n_window_type)
+    for (r in 1:n_window_type) {
+        #test
+        #r=5
+        #test
+        window_size = window_list[r]
+        n_window = ceiling(len/window_size)
+        # Get transformed approximated independent data
+        x_transformed=GetMle(x,window_size=window_size,L=L,method="ols")
+        # if the data is a list, transform it into matrix
+        if (class(x_transformed) != "matrix") {
+            x_transformed=as.matrix(x_transformed)
+        }
+        # Get the change points of transformed data
+        changePoints=ChangePoints(x_transformed,point_max=point_max,penalty=eval(penalty),seg_min=1,num_init=eval(num_init))$changepoints
+        # Map the change points of transformed data to original data and get score the change points.
+        # don't score the last number of change points, which is the last number of transformed data
+        if (length(changePoints) == 1) {
+            if (r!=1) {
+                score[1:len,r]=score[1:len,r-1]
+            }
+        } else {
+            if (r==1){
+                for (k in 1:(length(changePoints)-1)) {
+                    score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]=score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]+1
+                }
+            } else {
+                score[1:len,r]=score[1:len,r-1]
+                for (k in 1:(length(changePoints)-1)) {
+                    score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]=score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),(r-1)]+1
+                }
+            }
+        }
+    }
+    peakranges=PeakRange(score=score,tolerance=tolerance,point_max=point_max)
+    return(peakranges)
+    #return(score)
+}
