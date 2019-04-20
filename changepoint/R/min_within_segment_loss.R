@@ -125,8 +125,6 @@ OrderKmeans=function(x,K=4,num_init=sqrt(dim(x)[1])) {
   }
   N=dim(x)[1] # number of observations
   D=dim(x)[2] # dimension of each observation
-  # For computation convenience, add N-th number as change point
-  K=K+1
   # Change points number error handling
   if (N < K) {
     stop("Change point number too large or Input dimension error!")
