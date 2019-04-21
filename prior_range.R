@@ -6,18 +6,18 @@ x=rbind(a,b,c)
 l1=c(15,25)
 l2=c(75,100)
 l3=c(75,100)
-prior_range=list(l1,l2)
+prior_range_x=list(l1,l2)
 test=OrderKmeans(x,K=3)
-PriorRange(x,prior_range=list(l1,l2),num_init = 1)
+PriorRange(x,prior_range_x=list(l1,l2),num_init = 1)
 #K changepoints 
-PriorRangeOrderKmeans=function(x,prior_range=list(l1,l2),num_init=sqrt(dim(x)[1])) {
+PriorRangeOrderKmeans=function(x,prior_range_x=list(l1,l2),num_init=sqrt(dim(x)[1])) {
   if (class(x) != "matrix") {
     stop("Dataset must be matrix form!")
   }
   N=dim(x)[1] # number of observations
   D=dim(x)[2] # dimension of each observation
   #There are K segments 
-  K=length(prior_range)+1
+  K=length(prior_range_x)+1
   # Change points number error handling
   if (N < K) {
     stop("Change point number too large or Input dimension error!")
@@ -52,7 +52,7 @@ PriorRangeOrderKmeans=function(x,prior_range=list(l1,l2),num_init=sqrt(dim(x)[1]
       changePoints=numeric(K)
       changePoints[K]=N
       for (i in 1:(K-1)) {
-        changePoints[i]=floor(prior_range[[i]][1]+(prior_range[[i]][2]-prior_range[[i]][1])*runif(1))
+        changePoints[i]=floor(prior_range_x[[i]][1]+(prior_range_x[[i]][2]-prior_range_x[[i]][1])*runif(1))
       }
       #test
  
@@ -88,10 +88,10 @@ PriorRangeOrderKmeans=function(x,prior_range=list(l1,l2),num_init=sqrt(dim(x)[1]
         
         # consider if we should move the last part of segment i
         best_gain_sum=-Inf
-        if ((changePoints[i]-prior_range[[i]][1])>0) {
+        if ((changePoints[i]-prior_range_x[[i]][1])>0) {
 
           # scan all possible part that can be transformed form segment i to i+1
-          for (ell in 1:(changePoints[i]-prior_range[[i]][1])) {
+          for (ell in 1:(changePoints[i]-prior_range_x[[i]][1])) {
             #test
             cat("ell=",ell,"\n")
             #test
@@ -149,8 +149,8 @@ PriorRangeOrderKmeans=function(x,prior_range=list(l1,l2),num_init=sqrt(dim(x)[1]
           #test
           cat("num_each[i+1]=",num_each[i+1],"\n")
           #test
-          if ((prior_range[[i]][2]-changePoints[i])>0) {
-            for (ell in 1:(prior_range[[i]][2]-changePoints[i])) {
+          if ((prior_range_x[[i]][2]-changePoints[i])>0) {
+            for (ell in 1:(prior_range_x[[i]][2]-changePoints[i])) {
               #test
               #ell=24
               cat("ell=",ell,"\n")
