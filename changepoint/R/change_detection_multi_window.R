@@ -62,7 +62,7 @@
 #'   }
 #' }
 #' MultiWindow(x,window_list=c(100,50,20,10,5),point_max=4,L=2,seg_min=1,tolerance=1, method="ols")
-#' MultiWindow(x,window_list=c(100,50,20,10,5),point_max=3,prior_range=prior_range,L=2,seg_min=1,tolerance=1, method="ols")
+#' MultiWindow(x,window_list=c(100,50,20,10,5),point_max=3,prior_range=list(c(30,200),c(220,400)),L=2,seg_min=1,tolerance=1, method="ols")
 MultiWindow=function(x,window_list=c(100,50,20,10,5),point_max=5,prior_range=NULL,L=2,penalty=expression(log(dim(x_transformed)[1])),seg_min=1,num_init=expression(sqrt(dim(x_transformed)[1])),tolerance=1, method="ols") {
     len=length(x)
     n_window_type = length(window_list)
