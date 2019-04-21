@@ -80,6 +80,9 @@ MultiWindow=function(x,window_list=c(100,50,20,10,5),point_max=5,prior_range=NUL
             x_transformed=as.matrix(x_transformed)
         }
         if (is.null(prior_range)) {
+          #test
+          print("changePoints")
+          #test
           # Get the change points of transformed data
           changePoints=ChangePoints(x_transformed,point_max=point_max,penalty=eval(penalty),seg_min=1,num_init=eval(num_init))$changepoints
         } else {
@@ -91,9 +94,10 @@ MultiWindow=function(x,window_list=c(100,50,20,10,5),point_max=5,prior_range=NUL
             prior_range_x[[i]]=transformed_range
           }
           #test
+          print("range")
           print(dim(x_transformed))
           #test
-          changePoints=PriorRangeOrderKmeans(x_transformed,prior_range_x=prior_range_x,num_init=sqrt(dim(x)[1]))$changepoints
+          changePoints=PriorRangeOrderKmeans(x_transformed,prior_range_x=prior_range_x,num_init=eval(num_init))$changepoints
         }
         # Map the change points of transformed data to original data and get score the change points.
         # don't score the last number of change points, which is the last number of transformed data
