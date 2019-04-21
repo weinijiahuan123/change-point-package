@@ -8,7 +8,7 @@
 #' be approximated as independent. Then the change points of independent data
 #' can be detected by minimizing penalized quadratic loss. By further
 #' mapping these change points back to the original scale, several short ranges
-#' (each of size 2wr) that “probably” contain the desired change points are
+#' (each of size 2wr) that probably contain the desired change points are
 #' obtained. After repeating the above procedure for different wr,
 #' the detected ranges of change points from each window size are scored
 #' by one. The scores are aggregated, and the ranges with highest score or
