@@ -10,7 +10,7 @@ prior_range_x=list(l1,l2)
 test=OrderKmeans(x,K=3)
 PriorRange(x,prior_range_x=list(l1,l2),num_init = 1)
 #K changepoints 
-PriorRangeOrderKmeans=function(x,prior_range_x=list(l1,l2),num_init=sqrt(dim(x)[1])) {
+PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
   if (class(x) != "matrix") {
     stop("Dataset must be matrix form!")
   }
@@ -19,6 +19,10 @@ PriorRangeOrderKmeans=function(x,prior_range_x=list(l1,l2),num_init=sqrt(dim(x)[
   #There are K segments 
   K=length(prior_range_x)+1
   # Change points number error handling
+  #test
+  print(N)
+  print(K)
+  #test
   if (N < K) {
     stop("Change point number too large or Input dimension error!")
   }
@@ -215,7 +219,7 @@ PriorRangeOrderKmeans=function(x,prior_range_x=list(l1,l2),num_init=sqrt(dim(x)[
     #print(changePoints)
   }
 
-  k_changepints=list(wgss=best_wgss,changepoints=best_changepoints)
+  k_changepints=list(num_changepoints=K,changepoints=best_changepoints)
   return(k_changepints)
 }
 
