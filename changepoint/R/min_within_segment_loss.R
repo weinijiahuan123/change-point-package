@@ -130,7 +130,7 @@ OrderKmeans=function(x,K=4,num_init=sqrt(dim(x)[1])) {
     stop("Change point number too large or Input dimension error!")
   }
   if (N == K) {
-    k_changepints=list(wgss=0,changepoints=seq(K))
+    k_changepints=list(wgss=0,changepoints=as.numeric(seq(K)))
     return(k_changepints)
   }
   # randomize initial change points several times to avoid local optima
@@ -144,9 +144,9 @@ OrderKmeans=function(x,K=4,num_init=sqrt(dim(x)[1])) {
     if (K==1) {
       changePoints = N
       num_each=N
-      wgss=var(x)*(N-1)
+      wgss_sum=var(x)*(N-1)
       if (N==1) {
-        wgss=matrix(0,nrow=1,ncol=D)
+        wgss_sum=matrix(0,nrow=1,ncol=D)
       }
     } else {
       # store the within segment sum of squared distances to the segment mean (wgss)
