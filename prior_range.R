@@ -1,14 +1,13 @@
-set.seed(5701)
+#test
 a=matrix(rnorm(40,mean=-1,sd=1),nrow=20,ncol=2)
 b=matrix(rnorm(120,mean=0,sd=1),nrow=60,ncol=2)
 c=matrix(rnorm(40,mean=1,sd=1),nrow=20,ncol=2)
 x=rbind(a,b,c)
 l1=c(15,25)
 l2=c(75,100)
-l3=c(75,100)
 prior_range_x=list(l1,l2)
-test=OrderKmeans(x,K=3)
 PriorRange(x,prior_range_x=list(l1,l2),num_init = 1)
+#test
 #K changepoints 
 PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
   if (class(x) != "matrix") {
@@ -20,8 +19,8 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
   K=length(prior_range_x)+1
   # Change points number error handling
   #test
-  print(N)
-  print(K)
+  #print(N)
+  #print(K)
   #test
   if (N < K) {
     stop("Change point number too large or Input dimension error!")
@@ -34,7 +33,7 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
   best_wgss=Inf
   for (j in 1:num_init) {
     #test
-    cat("j=",j,"\n")
+    #cat("j=",j,"\n")
     #test
 
     # Special case: only have one change point
@@ -58,9 +57,7 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
       for (i in 1:(K-1)) {
         changePoints[i]=floor(prior_range_x[[i]][1]+(prior_range_x[[i]][2]-prior_range_x[[i]][1])*runif(1))
       }
-      #test
- 
-      #test
+
       # initialize for each segment the number of points, within segment sum of squares, and mean
       num_each[1] = changePoints[1]
       wgss_each[1,] = apply(matrix(x[1:changePoints[1],],ncol=D),2,var) * (num_each[1]-1)
@@ -84,10 +81,10 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
       for (i in 1:(K-1)) {
         #test
         #i=2
-        cat("i=",i,"\n")
-        cat("num_each=",num_each,"\n")
-        cat("num_each[i]=",num_each[i],"\n")
-        cat("changePoints=",changePoints,"\n")
+        #cat("i=",i,"\n")
+        #cat("num_each=",num_each,"\n")
+        #cat("num_each[i]=",num_each[i],"\n")
+        #cat("changePoints=",changePoints,"\n")
         #test
         
         # consider if we should move the last part of segment i
@@ -97,7 +94,7 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
           # scan all possible part that can be transformed form segment i to i+1
           for (ell in 1:(changePoints[i]-prior_range_x[[i]][1])) {
             #test
-            cat("ell=",ell,"\n")
+            #cat("ell=",ell,"\n")
             #test
 
             mean_candidatePart=apply(matrix(x[(changePoints[i]-ell+1):changePoints[i],],ncol=D),2,mean)
@@ -108,17 +105,17 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
             # store the best candidate part than can be transformed from segment i to i+1
             if ( sum(decrease) - sum(increase) > best_gain_sum) {
               #test
-              cat("decrease=",sum(decrease),"\n")
-              cat("increase=",sum(increase),"\n")
+              #cat("decrease=",sum(decrease),"\n")
+              #cat("increase=",sum(increase),"\n")
               #test
               best_gain = decrease - increase
               best_gain_sum = sum(best_gain)
               best_ell = ell
               best_candidatePart = matrix(x[(changePoints[i]-ell+1):changePoints[i],],ncol=D)
               #test
-              cat("best_candidatePart=",best_candidatePart,"\n")
-              cat("dim_candidate=",dim(best_candidatePart),"\n")
-              cat("best_ell =",best_ell,"\n")
+              #cat("best_candidatePart=",best_candidatePart,"\n")
+              #cat("dim_candidate=",dim(best_candidatePart),"\n")
+              #cat("best_ell =",best_ell,"\n")
               #test
               best_decrease = decrease
               best_increase = increase
@@ -131,7 +128,7 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
         # If not, consider if we should move the first part of segment i+1
         if  (best_gain_sum > 0) {
           #test
-          cat("left to right","\n")
+          #cat("left to right","\n")
           #test
           best_mean_candidatePart = apply(best_candidatePart,2,mean)
           mean_each[i,] = (num_each[i]*mean_each[i,]-best_ell*best_mean_candidatePart)/(num_each[i]-best_ell)
@@ -143,21 +140,21 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
           wgss_each[i,] = wgss_each[i,] - best_decrease - wgss_part
           wgss_each[i+1,] = wgss_each[i+1,] + best_increase + wgss_part
           #test
-          cat("changePoints[i]",changePoints[i],"\n")
-          cat("num_each[i] =",num_each[i],"\n")
-          cat("num_each[i+1] =",num_each[i+1],"\n")
+          #cat("changePoints[i]",changePoints[i],"\n")
+          #cat("num_each[i] =",num_each[i],"\n")
+          #cat("num_each[i+1] =",num_each[i+1],"\n")
           #test
         } else {
           # consider if we should move the first part of segment i+1
           best_gain_sum=-Inf
           #test
-          cat("num_each[i+1]=",num_each[i+1],"\n")
+          #cat("num_each[i+1]=",num_each[i+1],"\n")
           #test
           if ((prior_range_x[[i]][2]-changePoints[i])>0) {
             for (ell in 1:(prior_range_x[[i]][2]-changePoints[i])) {
               #test
               #ell=24
-              cat("ell=",ell,"\n")
+              #cat("ell=",ell,"\n")
               #test
               if (ell<num_each[i+1]) {
                 mean_candidatePart=apply(matrix(x[(changePoints[i]+1):(changePoints[i]+ell),],ncol=D),2,mean)
@@ -166,17 +163,17 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
                 increase=ell*num_each[i]/(num_each[i]+ell)*(mean_each[i,]-mean_candidatePart)^2
                 if ( sum(decrease) - sum(increase) > best_gain_sum) {
                   #test
-                  cat("decrease=",sum(decrease),"\n")
-                  cat("increase=",sum(increase),"\n")
+                  #cat("decrease=",sum(decrease),"\n")
+                  #cat("increase=",sum(increase),"\n")
                   #test
                   best_gain = decrease - increase
                   best_gain_sum = sum(best_gain)
                   best_ell = ell
                   best_candidatePart = matrix(x[(changePoints[i]+1):(changePoints[i]+ell),],ncol=D)
                   #test
-                  cat("best_candidatePart=",best_candidatePart,"\n")
-                  cat("dim_candidate=",dim(best_candidatePart),"\n")
-                  cat("best_ell =",best_ell,"\n")
+                  #cat("best_candidatePart=",best_candidatePart,"\n")
+                  #cat("dim_candidate=",dim(best_candidatePart),"\n")
+                  #cat("best_ell =",best_ell,"\n")
                   #test
                   best_decrease = decrease
                   best_increase = increase
@@ -186,7 +183,7 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
           }
           if  (best_gain_sum > 0) {
             #test
-            cat("right to left","\n")
+            #cat("right to left","\n")
             #test
             best_mean_candidatePart = apply(best_candidatePart,2,mean)
             mean_each[i+1,] = (num_each[i+1]*mean_each[i+1,]-best_ell*best_mean_candidatePart)/(num_each[i+1]-best_ell)
@@ -198,9 +195,9 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
             wgss_each[i,] = wgss_each[i,] + best_decrease + wgss_part
             wgss_each[i+1,] = wgss_each[i+1,] - best_increase - wgss_part
             #test
-            cat("changePoints[i]",changePoints[i],"\n")
-            cat("num_each[i] =",num_each[i],"\n")
-            cat("num_each[i+1] =",num_each[i+1],"\n")
+            #cat("changePoints[i]",changePoints[i],"\n")
+            #cat("num_each[i] =",num_each[i],"\n")
+            #cat("num_each[i+1] =",num_each[i+1],"\n")
             #test
           }
         }
