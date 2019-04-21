@@ -144,9 +144,9 @@ OrderKmeans=function(x,K=4,num_init=sqrt(dim(x)[1])) {
     if (K==1) {
       changePoints = N
       num_each=N
-      wgss_sum=var(x)*(N-1)
+      wgss=var(x)*(N-1)
       if (N==1) {
-        wgss_sum=matrix(0,nrow=1,ncol=D)
+        wgss=matrix(0,nrow=1,ncol=D)
       }
     } else {
       # store the within segment sum of squared distances to the segment mean (wgss)
@@ -185,44 +185,86 @@ OrderKmeans=function(x,K=4,num_init=sqrt(dim(x)[1])) {
         mean_each[i,] = apply(matrix(x[(changePoints[i-1]+1):changePoints[i],],ncol=D),2,mean)
 
       }
-      # set maximum iteration in order to control speed
-      iter=0; maxIter = N
-      move=1
-      # if reaches a equilibrium or too many iterations, stop
-      while ((move==1) & (iter < maxIter)) {
-        # initialize the move to false
-        move=0
-        iter=iter+1
-        # test
-        #i=1;
-        #cat("iter=",iter,"\n")
+
+      # scan the middle K-1 change points
+      # suppose that we are at the crossing of segments i and i+1
+      for (i in 1:(K-1)) {
+        #test
+        #cat("i=",i,"\n")
+        #cat("num_each=",num_each,"\n")
+        #cat("num_each[i]=",num_each[i],"\n")
         #test
 
-        # scan the middle K-1 change points
-        # suppose that we are at the crossing of segments i and i+1
-        for (i in 1:(K-1)) {
-          #test
-          #cat("i=",i,"\n")
-          #cat("num_each=",num_each,"\n")
-          #cat("num_each[i]=",num_each[i],"\n")
-          #test
+        # consider if we should move the last part of segment i
+        best_gain_sum=-Inf
+        if (num_each[i]>1) {
 
-          # consider if we should move the last part of segment i
+          # scan all possible part that can be transformed form segment i to i+1
+          for (ell in 1:(num_each[i]-1)) {
+            #test
+            #cat("ell=",ell,"\n")
+            #test
+
+            mean_candidatePart=apply(matrix(x[(changePoints[i]-ell+1):changePoints[i],],ncol=D),2,mean)
+            # the descrease in wgss of segment i
+            decrease=ell*num_each[i]/(num_each[i]-ell)*(mean_each[i,]-mean_candidatePart)^2
+            # the increase in wgss of segment i+1
+            increase=ell*num_each[i+1]/(num_each[i+1]+ell)*(mean_each[i+1,]-mean_candidatePart)^2
+            # store the best candidate part than can be transformed from segment i to i+1
+            if ( sum(decrease) - sum(increase) > best_gain_sum) {
+              #test
+              #cat("decrease=",sum(decrease),"\n")
+              #cat("increase=",sum(increase),"\n")
+              #test
+              best_gain = decrease - increase
+              best_gain_sum = sum(best_gain)
+              best_ell = ell
+              best_candidatePart = matrix(x[(changePoints[i]-ell+1):changePoints[i],],ncol=D)
+              #test
+              #cat("best_candidatePart=",best_candidatePart,"\n")
+              #cat("best_ell =",best_ell,"\n")
+              #test
+              best_decrease = decrease
+              best_increase = increase
+            }
+          }
+        }
+        # If total wgss decrease, move the best candidate part from segment i to i+1,
+        # and get new segment i and i+1, also update the corresponding mean, wgss adn change point.
+        # If not, consider if we should move the first part of segment i+1
+        if  (best_gain_sum > 0) {
+          #test
+          #cat("left to right","\n")
+          #test
+          best_mean_candidatePart = apply(best_candidatePart,2,mean)
+          mean_each[i,] = (num_each[i]*mean_each[i,]-best_ell*best_mean_candidatePart)/(num_each[i]-best_ell)
+          mean_each[i+1,] = (num_each[i+1]*mean_each[i+1,]+best_ell*best_mean_candidatePart)/(num_each[i+1]+best_ell)
+          changePoints[i] = changePoints[i] - best_ell
+          num_each[i] = num_each[i] - best_ell
+          num_each[i+1] = num_each[i+1] + best_ell
+          wgss_part = apply((best_candidatePart - matrix(best_mean_candidatePart,nrow=best_ell,ncol=D,byrow=TRUE))^2,2,sum)
+          wgss_each[i,] = wgss_each[i,] - best_decrease - wgss_part
+          wgss_each[i+1,] = wgss_each[i+1,] + best_increase + wgss_part
+          #test
+          #cat("changePoints[i]",changePoints[i],"\n")
+          #cat("num_each[i] =",num_each[i],"\n")
+          #cat("num_each[i+1] =",num_each[i+1],"\n")
+          #test
+        } else {
+          # consider if we should move the first part of segment i+1
           best_gain_sum=-Inf
-          if (num_each[i]>1) {
-
-            # scan all possible part that can be transformed form segment i to i+1
-            for (ell in 1:(num_each[i]-1)) {
+          #test
+          #cat("num_each[i+1]=",num_each[i+1],"\n")
+          #test
+          if (num_each[i+1]>1) {
+            for (ell in 1:(num_each[i+1]-1)) {
               #test
               #cat("ell=",ell,"\n")
               #test
+              mean_candidatePart=apply(matrix(x[(changePoints[i]+1):(changePoints[i]+ell),],ncol=D),2,mean)
 
-              mean_candidatePart=apply(matrix(x[(changePoints[i]-ell+1):changePoints[i],],ncol=D),2,mean)
-              # the descrease in wgss of segment i
-              decrease=ell*num_each[i]/(num_each[i]-ell)*(mean_each[i,]-mean_candidatePart)^2
-              # the increase in wgss of segment i+1
-              increase=ell*num_each[i+1]/(num_each[i+1]+ell)*(mean_each[i+1,]-mean_candidatePart)^2
-              # store the best candidate part than can be transformed from segment i to i+1
+              decrease=ell*num_each[i+1]/(num_each[i+1]-ell)*(mean_each[i+1,]-mean_candidatePart)^2
+              increase=ell*num_each[i]/(num_each[i]+ell)*(mean_each[i,]-mean_candidatePart)^2
               if ( sum(decrease) - sum(increase) > best_gain_sum) {
                 #test
                 #cat("decrease=",sum(decrease),"\n")
@@ -231,7 +273,7 @@ OrderKmeans=function(x,K=4,num_init=sqrt(dim(x)[1])) {
                 best_gain = decrease - increase
                 best_gain_sum = sum(best_gain)
                 best_ell = ell
-                best_candidatePart = matrix(x[(changePoints[i]-ell+1):changePoints[i],],ncol=D)
+                best_candidatePart = matrix(x[(changePoints[i]+1):(changePoints[i]+ell),],ncol=D)
                 #test
                 #cat("best_candidatePart=",best_candidatePart,"\n")
                 #cat("best_ell =",best_ell,"\n")
@@ -241,86 +283,26 @@ OrderKmeans=function(x,K=4,num_init=sqrt(dim(x)[1])) {
               }
             }
           }
-          # If total wgss decrease, move the best candidate part from segment i to i+1,
-          # and get new segment i and i+1, also update the corresponding mean, wgss adn change point.
-          # If not, consider if we should move the first part of segment i+1
           if  (best_gain_sum > 0) {
             #test
-            #cat("left to right","\n")
+            #cat("right to left","\n")
             #test
-            move = 1
             best_mean_candidatePart = apply(best_candidatePart,2,mean)
-            mean_each[i,] = (num_each[i]*mean_each[i,]-best_ell*best_mean_candidatePart)/(num_each[i]-best_ell)
-            mean_each[i+1,] = (num_each[i+1]*mean_each[i+1,]+best_ell*best_mean_candidatePart)/(num_each[i+1]+best_ell)
-            changePoints[i] = changePoints[i] - best_ell
-            num_each[i] = num_each[i] - best_ell
-            num_each[i+1] = num_each[i+1] + best_ell
+            mean_each[i+1,] = (num_each[i+1]*mean_each[i+1,]-best_ell*best_mean_candidatePart)/(num_each[i+1]-best_ell)
+            mean_each[i,] = (num_each[i]*mean_each[i,]+best_ell*best_mean_candidatePart)/(num_each[i]+best_ell)
+            changePoints[i] = changePoints[i] + best_ell
+            num_each[i] = num_each[i] + best_ell
+            num_each[i+1] = num_each[i+1] - best_ell
             wgss_part = apply((best_candidatePart - matrix(best_mean_candidatePart,nrow=best_ell,ncol=D,byrow=TRUE))^2,2,sum)
-            wgss_each[i,] = wgss_each[i,] - best_decrease - wgss_part
-            wgss_each[i+1,] = wgss_each[i+1,] + best_increase + wgss_part
+            wgss_each[i,] = wgss_each[i,] + best_decrease + wgss_part
+            wgss_each[i+1,] = wgss_each[i+1,] - best_increase - wgss_part
             #test
             #cat("changePoints[i]",changePoints[i],"\n")
             #cat("num_each[i] =",num_each[i],"\n")
             #cat("num_each[i+1] =",num_each[i+1],"\n")
             #test
-          } else {
-            # consider if we should move the first part of segment i+1
-            best_gain_sum=-Inf
-            #test
-            #cat("num_each[i+1]=",num_each[i+1],"\n")
-            #test
-            if (num_each[i+1]>1) {
-              for (ell in 1:(num_each[i+1]-1)) {
-                #test
-                #cat("ell=",ell,"\n")
-                #test
-                mean_candidatePart=apply(matrix(x[(changePoints[i]+1):(changePoints[i]+ell),],ncol=D),2,mean)
-
-                decrease=ell*num_each[i+1]/(num_each[i+1]-ell)*(mean_each[i+1,]-mean_candidatePart)^2
-                increase=ell*num_each[i]/(num_each[i]+ell)*(mean_each[i,]-mean_candidatePart)^2
-                if ( sum(decrease) - sum(increase) > best_gain_sum) {
-                  #test
-                  #cat("decrease=",sum(decrease),"\n")
-                  #cat("increase=",sum(increase),"\n")
-                  #test
-                  best_gain = decrease - increase
-                  best_gain_sum = sum(best_gain)
-                  best_ell = ell
-                  best_candidatePart = matrix(x[(changePoints[i]+1):(changePoints[i]+ell),],ncol=D)
-                  #test
-                  #cat("best_candidatePart=",best_candidatePart,"\n")
-                  #cat("best_ell =",best_ell,"\n")
-                  #test
-                  best_decrease = decrease
-                  best_increase = increase
-                }
-              }
-            }
-            if  (best_gain_sum > 0) {
-              #test
-              #cat("right to left","\n")
-              #test
-              move = 1
-              best_mean_candidatePart = apply(best_candidatePart,2,mean)
-              mean_each[i+1,] = (num_each[i+1]*mean_each[i+1,]-best_ell*best_mean_candidatePart)/(num_each[i+1]-best_ell)
-              mean_each[i,] = (num_each[i]*mean_each[i,]+best_ell*best_mean_candidatePart)/(num_each[i]+best_ell)
-              changePoints[i] = changePoints[i] + best_ell
-              num_each[i] = num_each[i] + best_ell
-              num_each[i+1] = num_each[i+1] - best_ell
-              wgss_part = apply((best_candidatePart - matrix(best_mean_candidatePart,nrow=best_ell,ncol=D,byrow=TRUE))^2,2,sum)
-              wgss_each[i,] = wgss_each[i,] + best_decrease + wgss_part
-              wgss_each[i+1,] = wgss_each[i+1,] - best_increase - wgss_part
-              #test
-              #cat("changePoints[i]",changePoints[i],"\n")
-              #cat("num_each[i] =",num_each[i],"\n")
-              #cat("num_each[i+1] =",num_each[i+1],"\n")
-              #test
-            }
           }
         }
-        #test
-        #cat("move=",move,"\n")
-        #test
       }
       # get the wgss of all segments with original dimension
       wgss=colSums(wgss_each)
