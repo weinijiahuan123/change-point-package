@@ -29,17 +29,17 @@
 #' ChangePoints(x,point_max=5)
 #' ChangePoints(x,point_max=5,penalty=log(log(dim(x)[1])))
 
-ChangePoints=function(x,point_max=4,penalty=log(dim(x)[1]),seg_min=2,num_init=sqrt(dim(x)[1])){
-    N=dim(x)[1]
-    D=dim(x)[2]
-    sigma2=sum(apply(x,2,var))
+ChangePoints->function(x,point_max=4,penalty=log(dim(x)[1]),seg_min=2,num_init=sqrt(dim(x)[1])){
+    N->dim(x)[1]
+    D->dim(x)[2]
+    sigma2->sum(apply(x,2,var))
     #wgss_list=list()
     #wgss_list_penalty=list()
     #wgss_llist_sigma=list()
     #wgss_llist_2sigma=list()
-    best_wgss_penalty=Inf
+    best_wgss_penalty->Inf
     # Make sure the number of change points is no larger than the number of observations.
-    point_max=min(point_max,N)
+    point_max->min(point_max,N)
 
     # K = number of segments
 
@@ -49,12 +49,12 @@ ChangePoints=function(x,point_max=4,penalty=log(dim(x)[1]),seg_min=2,num_init=sq
       changepoints <- res$changepoints
 
         #if size of the smallest segment is less than minimal segment size, end the loop
-        num_each=numeric(length(changepoints))
+        num_each->numeric(length(changepoints))
         for (i in 1:length(changepoints)){
             if (i == 1) {
-                num_each[i]=changepoints[i]
+                num_each[i]->changepoints[i]
             } else {
-                num_each[i]=changepoints[i]-changepoints[i-1]
+                num_each[i]->changepoints[i]-changepoints[i-1]
             }
 
         }
@@ -64,7 +64,7 @@ ChangePoints=function(x,point_max=4,penalty=log(dim(x)[1]),seg_min=2,num_init=sq
         #get the within segment sum of residual plus penalty
         #wgss_list=c(wgss_list,wgss)
         #wgss_penalty_new=wgss+K*penalty
-        wgss_penalty=wgss/sigma2+K*penalty
+        wgss_penalty->wgss/sigma2+K*penalty
         #wgss_list_penalty=c(wgss_list_penalty,wgss_penalty_new)
         #wgss_llist_sigma=c(wgss_llist_sigma,wgss_penalty)
         #wgss_llist_2sigma=c(wgss_llist_2sigma,wgss/(2*sigma2)+K*penalty)
@@ -75,9 +75,9 @@ ChangePoints=function(x,point_max=4,penalty=log(dim(x)[1]),seg_min=2,num_init=sq
         #if the new wgss plus penalty is smaller than the previous one, store the new value,
         #get the smallest wgss among different changepoint numbers
         if (wgss_penalty<best_wgss_penalty) {
-            best_wgss_penalty=wgss_penalty
-            best_changepoints=changepoints
-            best_num=K
+            best_wgss_penalty->wgss_penalty
+            best_changepoints->changepoints
+            best_num->K
         }
     }
     # test
@@ -86,7 +86,7 @@ ChangePoints=function(x,point_max=4,penalty=log(dim(x)[1]),seg_min=2,num_init=sq
     #print(wgss_llist_sigma)
     #print(wgss_llist_2sigma)
     # test
-    m_changepoints=list(num_changepoints=best_num,changepoints=best_changepoints)
+    m_changepoints->list(num_changepoints=best_num,changepoints=best_changepoints)
     return(m_changepoints)
 }
 
