@@ -27,67 +27,66 @@
 #' c=matrix(rnorm(40,mean=1,sd=1),nrow=20,ncol=2)
 #' x=rbind(a,b,c)
 #' ChangePoints(x,point_max=5)
-#' ChangePoints(x,point_max=5,penalty=log(log(dim(x)[1])))
+#' ChangePoints(x,point_max=5,penalty="hq")
 
-ChangePoints->function(x,point_max=4,penalty=log(dim(x)[1]),seg_min=2,num_init=sqrt(dim(x)[1])){
-    N->dim(x)[1]
-    D->dim(x)[2]
-    sigma2->sum(apply(x,2,var))
-    #wgss_list=list()
-    #wgss_list_penalty=list()
-    #wgss_llist_sigma=list()
-    #wgss_llist_2sigma=list()
-    best_wgss_penalty->Inf
-    # Make sure the number of change points is no larger than the number of observations.
-    point_max->min(point_max,N)
+ChangePoints<-function(x,point_max=4,penalty="bic",seg_min=2,num_init="sqrt"){
+  N<-dim(x)[1]
+  D<-dim(x)[2]
+  #sigma2<-sum(apply(x,2,var))
+  #wgss_list=list()
+  #wgss_list_penalty=list()
+  wgss_llist_sigma=list()
+  #wgss_llist_2sigma=list()
+  best_wgss_penalty<-Inf
+  # Make sure the number of change points is no larger than the number of observations.
+  point_max<-min(point_max,N)
 
-    # K = number of segments
+  # K = number of segments
 
-    for (K in 1:point_max) {
-      res <- OrderKmeans(x,K,num_init=num_init)
-      wgss <- res$wgss
-      changepoints <- res$changepoints
-
-        #if size of the smallest segment is less than minimal segment size, end the loop
-        num_each->numeric(length(changepoints))
-        for (i in 1:length(changepoints)){
-            if (i == 1) {
-                num_each[i]->changepoints[i]
-            } else {
-                num_each[i]->changepoints[i]-changepoints[i-1]
-            }
-
-        }
-        if (min(num_each)<seg_min) {
-            break
-        }
-        #get the within segment sum of residual plus penalty
-        #wgss_list=c(wgss_list,wgss)
-        #wgss_penalty_new=wgss+K*penalty
-        wgss_penalty->wgss/sigma2+K*penalty
-        #wgss_list_penalty=c(wgss_list_penalty,wgss_penalty_new)
-        #wgss_llist_sigma=c(wgss_llist_sigma,wgss_penalty)
-        #wgss_llist_2sigma=c(wgss_llist_2sigma,wgss/(2*sigma2)+K*penalty)
-        #test
-        #print(penalty)
-        #test
-
-        #if the new wgss plus penalty is smaller than the previous one, store the new value,
-        #get the smallest wgss among different changepoint numbers
-        if (wgss_penalty<best_wgss_penalty) {
-            best_wgss_penalty->wgss_penalty
-            best_changepoints->changepoints
-            best_num->K
-        }
+  for (K in 1:point_max) {
+    #K=2
+    res <- OrderKmeans(x,K,num_init=num_init)
+    wgss <- res$wgss
+    num_each <- res$num_each
+    changepoints <- res$changepoints
+    #if size of the smallest segment is less than minimal segment size, end the loop
+    if (min(num_each)<seg_min) {
+      break
     }
-    # test
-    #print(wgss_list)
-    #print(wgss_list_penalty)
-    #print(wgss_llist_sigma)
-    #print(wgss_llist_2sigma)
-    # test
-    m_changepoints->list(num_changepoints=best_num,changepoints=best_changepoints)
-    return(m_changepoints)
+    #get the within segment sum of residual plus penalty
+    #wgss_list=c(wgss_list,wgss)
+    #wgss_penalty_new=wgss+K*penalty
+    #wgss_penalty<-wgss/sigma2+K*penalty
+    if (penalty == "bic") {
+      wgss_penalty <- sum(num_each * log(wgss/num_each)) + D * K * log(N)
+    } else if (penalty == "aic") {
+      wgss_penalty <- sum(num_each * log(wgss/num_each)) + 2 * D * K
+    } else if (penalty == "hq") {
+      wgss_penalty <- sum(num_each * log(wgss/num_each)) + D * K * log(log(N))
+    }
+    #wgss_list_penalty=c(wgss_list_penalty,wgss_penalty_new)
+    wgss_llist_sigma=c(wgss_llist_sigma,wgss_penalty)
+    #wgss_llist_2sigma=c(wgss_llist_2sigma,wgss/(2*sigma2)+K*penalty)
+    #test
+    #print(penalty)
+    #test
+
+    #if the new wgss plus penalty is smaller than the previous one, store the new value,
+    #get the smallest wgss among different changepoint numbers
+    if (wgss_penalty<best_wgss_penalty) {
+      best_wgss_penalty<-wgss_penalty
+      best_changepoints<-changepoints
+      best_num<-K
+    }
+  }
+  # test
+  #print(wgss_list)
+  #print(wgss_list_penalty)
+  print(wgss_llist_sigma)
+  #print(wgss_llist_2sigma)
+  # test
+  m_changepoints<-list(num_changepoints=best_num,changepoints=best_changepoints)
+  return(m_changepoints)
 }
 
 #' Detect Location of Change Points of Independent Data
@@ -118,49 +117,53 @@ ChangePoints->function(x,point_max=4,penalty=log(dim(x)[1]),seg_min=2,num_init=s
 #' x=rbind(a,b,c)
 #' OrderKmeans(x,K=3)
 #' OrderKmeans(x,K=3,num_init=2*sqrt(dim(x)[1]))
-OrderKmeans<-function(x,K=4,num_init=sqrt(dim(x)[1])) {
+OrderKmeans <- function(x, K=4, num_init="sqrt") {
   if (class(x) != "matrix") {
     stop("Dataset must be matrix form!")
   }
   N<-dim(x)[1] # number of observations
   D<-dim(x)[2] # dimension of each observation
+  # There are M segments
+  M <- K+1
   # Change points number error handling
-  if (N < K) {
+  if (N < M) {
     stop("Change point number too large or Input dimension error!")
+  } else if (M == 1) {
+    stop("No change point!")
   }
-  if (N == K) {
-    k_changepints<-list(wgss=0,changepoints=as.numeric(seq(K)))
-    return(k_changepints)
-  }
-  # randomize initial change points several times to avoid local optima
-  best_wgss_sum<-Inf
-  for (j in 1:num_init) {
-    #test
-    #cat("j=",j)
-    #test
+  # special case, N == M
+  if (N == M) {
+    best_wgss_sum <- 0
+    best_num_each <- matrix(1,nrow=N,ncol=1)
+    best_wgss <- rep(0,N)
+    best_changepoints <- as.numeric(seq(N))
+  } else {
 
-    # Special case: only have one change point
-    if (K==1) {
-      changePoints <- N
-      num_each<-N
-      wgss<-var(x)*(N-1)
-      if (N==1) {
-        wgss<-matrix(0,nrow=1,ncol=D)
-      }
-    } else {
+    # randomize initial change points several times to avoid local optima
+    best_wgss_sum<-Inf
+    # set the random initialization times
+    if (num_init == "sqrt") {
+      num_init <- sqrt(dim(x)[1])
+    }
+    for (j in 1:num_init) {
+      #test
+      #cat("j=",j)
+      #test
+
       # store the within segment sum of squared distances to the segment mean (wgss)
       # in each dimension in each segment
-      num_each<-matrix(0,nrow=K,ncol=1)
-      wgss_each<-matrix(0,nrow=K,ncol=D)
-      mean_each<-matrix(0,nrow=K,ncol=D)
+      num_each<-matrix(0,nrow=M,ncol=1)
+      wgss_each<-matrix(0,nrow=M,ncol=D)
+      mean_each<-matrix(0,nrow=M,ncol=D)
 
-      # initialize change points
-      changePoints<-floor(1+(N-2)*runif(K-1))
+      # Initialize change points, add N-th observation as the last change point so
+      # there are K+1 change points
+      changePoints<-floor(1+(N-2)*runif(K))
       changePoints<-c(changePoints,N)
       changePoints<-unique(changePoints)
 
       # make sure change points are unique
-      while (length(changePoints)<K) {
+      while (length(changePoints)<M) {
         changePoints<-c(changePoints,floor(1+(N-2)*runif(1)))
         changePoints<-unique(changePoints)
       }
@@ -174,7 +177,7 @@ OrderKmeans<-function(x,K=4,num_init=sqrt(dim(x)[1])) {
       }
       mean_each[1,] <- apply(matrix(x[1:changePoints[1],],ncol=D),2,mean)
 
-      for (i in 2:K) {
+      for (i in 2:M) {
         num_each[i] <- changePoints[i] - changePoints[i-1]
         wgss_each[i,] <- apply(matrix(x[(changePoints[i-1]+1):changePoints[i],],ncol=D),2,var) * (num_each[i]-1)
         # special case: one segment only contains one number, avoid get NA for variance
@@ -185,10 +188,11 @@ OrderKmeans<-function(x,K=4,num_init=sqrt(dim(x)[1])) {
 
       }
 
-      # scan the middle K-1 change points
+      # scan the middle K change points
       # suppose that we are at the crossing of segments i and i+1
-      for (i in 1:(K-1)) {
+      for (i in 1:K) {
         #test
+        #i=1
         #cat("i=",i,"\n")
         #cat("num_each=",num_each,"\n")
         #cat("num_each[i]=",num_each[i],"\n")
@@ -201,6 +205,7 @@ OrderKmeans<-function(x,K=4,num_init=sqrt(dim(x)[1])) {
           # scan all possible part that can be transformed form segment i to i+1
           for (ell in 1:(num_each[i]-1)) {
             #test
+            #ell=12
             #cat("ell=",ell,"\n")
             #test
 
@@ -244,6 +249,12 @@ OrderKmeans<-function(x,K=4,num_init=sqrt(dim(x)[1])) {
           wgss_part <- apply((best_candidatePart - matrix(best_mean_candidatePart,nrow=best_ell,ncol=D,byrow=TRUE))^2,2,sum)
           wgss_each[i,] <- wgss_each[i,] - best_decrease - wgss_part
           wgss_each[i+1,] <- wgss_each[i+1,] + best_increase + wgss_part
+          #if (i == 1) {
+          #  wgss_each[i,] <- apply(matrix(x[1:changePoints[i],],ncol=D),2,var) * (num_each[i]-1)
+          #} else {
+          #  wgss_each[i,] <- apply(matrix(x[(changePoints[i-1]+1):changePoints[i],],ncol=D),2,var) * (num_each[i]-1)
+          #}
+          #wgss_each[i+1,] <- apply(matrix(x[(changePoints[i]+1):changePoints[i+1],],ncol=D),2,var) * (num_each[i+1]-1)
           #test
           #cat("changePoints[i]",changePoints[i],"\n")
           #cat("num_each[i] =",num_each[i],"\n")
@@ -302,22 +313,27 @@ OrderKmeans<-function(x,K=4,num_init=sqrt(dim(x)[1])) {
             #test
           }
         }
+        # get the total wgss of each segment
+        wgss<-rowSums(wgss_each)
       }
-      # get the wgss of all segments with original dimension
-      wgss<-colSums(wgss_each)
+      #get the total wgss of all segments
+      wgss_sum<-sum(wgss)
+      # store the smallest total wgss among several initializations.
+      if (best_wgss_sum>wgss_sum) {
+        best_wgss_sum<-wgss_sum
+        best_wgss <- wgss
+        #test
+        #best_wgss_test<-wgss_each
+        #test
+        best_num_each <- num_each
+        best_changepoints<-changePoints
+      }
+      #print(wgss_sum)
+      #print(changePoints)
     }
-    #get the total wgss of all dimensions
-    wgss_sum<-sum(wgss)
-    # store the smallest total wgss among several initializations.
-    if (best_wgss_sum>wgss_sum) {
-      best_wgss_sum<-wgss_sum
-      best_wgss <- wgss
-      best_num_each <- num_each
-      best_changepoints<-changePoints
-    }
-    #print(wgss_sum)
-    #print(changePoints)
   }
+  # Delete the last observation from change points
+  best_changepoints=best_changepoints[-M]
 
   k_changepints<-list(wgss_sum=best_wgss_sum,num_each=best_num_each,wgss=best_wgss,changepoints=best_changepoints)
   return(k_changepints)
