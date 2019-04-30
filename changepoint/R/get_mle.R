@@ -7,14 +7,14 @@
 #' J. Ding, Y. Xiang, L. Shen, and V. Tarokh, \emph{Multiple Change Point Analysis:
 #' Fast Implementation and Strong Consistency}. IEEE Transactions on Signal
 #' Processing, vol. 65, no. 17, pp. 4495-4510, 2017.
-#' @param x The original data to find change points.
+#' @param y The original data to find change points.
 #' @param window_size The number of observations each window contains.
 #' @param L Lag order of the dataset. L>=1
 #' @param method The method used to estimate coefficients.
 #'           Must be one of c("yule-walker", "ols", "mle", "yw").
 #'           Default is ols (ordinal least squares).
 #'
-#' @return x_transformed: The transformed data, which are the estimated coefficients of original data.
+#' @return x: The transformed data, which are the estimated coefficients of original data.
 #' @export
 #' @examples
 #' N = 1000
@@ -39,29 +39,34 @@
 #' GetMle(x,window_size=100,L=2,method="mle")
 #' GetMle(x,window_size=100,L=2,method="ols")
 #' GetMle(x,window_size=100,L=2,method="yw")
-GetMle=function(x,window_size,L,method="ols") {
-    N=length(x)
-    n_window = ceiling(N/window_size)
-    x_transformed=matrix(0,nrow=n_window,ncol=L+1)
-    for (n in 1:n_window) {
-        #test
-        #test
-        #get estimated coefficients including constant
-        if (method == "ols") {
-            est=ar(x[(1+(n-1)*window_size):min(n*window_size,N)],aic=FALSE,order.max = L,method="ols")
-            x_transformed[n,1]=est$x.intercept
-            x_transformed[n,2:(L+1)]=est$ar
-        }
-        if (method == "mle") {
-            est=ar(x[(1+(n-1)*window_size):min(n*window_size,N)],aic=FALSE,order.max = L,method="mle")
-            x_transformed[n,1]=est$x.mean
-            x_transformed[n,2:(L+1)]=est$ar
-        }
-        if ((method == "yule-walker") || (method == "yw")) {
-            est=ar(x[(1+(n-1)*window_size):min(n*window_size,N)],aic=FALSE,order.max = L,method="yule-walker")
-            x_transformed[n,1]=est$x.mean
-            x_transformed[n,2:(L+1)]=est$ar
-        }
-    }
-    return(x_transformed)
+GetMle <- function(y, window_size) {
+  N <- length(y)
+  n_window <- ceiling(N/window_size)
+  L <- 2
+  x <- matrix(0, nrow = n_window, ncol = L+1)
+  for (n in 1:n_window) {
+    #test
+    #test
+    #get estimated coefficients including constant
+    est <- ar(y[(1 + (n - 1) * window_size):min(n * window_size, N)], aic = FALSE, order.max = L, method = "ols")
+    x[n, 1] <- est$x.intercept
+    x[n, 2:(L + 1)] <- est$ar
+
+#    if (method == "ols") {
+#      est<-ar(x[(1+(n-1)*window_size):min(n*window_size,N)],aic=FALSE,order.max = L,method="ols")
+#      x_transformed[n,1]<-est$x.intercept
+#      x_transformed[n,2:(L+1)]<-est$ar
+#    }
+#    if (method == "mle") {
+#      est<-ar(x[(1+(n-1)*window_size):min(n*window_size,N)],aic=FALSE,order.max = L,method="mle")
+#      x_transformed[n,1]<-est$x.mean
+#      x_transformed[n,2:(L+1)]<-est$ar
+#    }
+#    if ((method == "yule-walker") || (method == "yw")) {
+#      est<-ar(x[(1+(n-1)*window_size):min(n*window_size,N)],aic=FALSE,order.max = L,method="yule-walker")
+#      x_transformed[n,1]<-est$x.mean
+#      x_transformed[n,2:(L+1)]<-est$ar
+#    }
+  }
+  return(x)
 }
