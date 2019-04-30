@@ -22,21 +22,25 @@
 #'
 #' @param y The original data to find change points. Must be one dimensional data
 #' @param window_list The list of window sizes, must be in form c(100,50,20,10,5),
-#'         in descending order and each window_size > 2L.
+#'         in descending order and each window_size > 2L. L is the lag order of
+#'         the dataset.
 #' @param point_max The largest candidate number of change points.
 #' @param prior_range The prior ranges that considered to contain change points.Each prior range
 #'                    contains one change point. example: prior_range=list(c(30,200),c(220,400))
-#' @param L Lag order of the dataset. L>=1
-#' @param penalty Penalty term. Default is BIC, must be in form penalty=expression(.)
-#'                example: penalty=expression(log(log(dim(x_transformed)[1]))).
+#' @param get_mle The method used to transform dependent data to independent data.
+#' @param penalty Penalty term. Default is "bic".
 #' @param seg_min Minimal segment size, must be positive integer.
 #' @param num_init The number of repetition times, in order to avoid local minimal.
 #'                 Default is squared root of number of transformed data.
-#'                 must be in form num_init=expression(.),
-#'                 example: num_init=expression(2*sqrt(dim(x_transformed)[1])).
 #' @param tolerance The tolerance level. The selected narrow ranges are with score at least S-tolerance.
-#' @param method Character string giving the method used to estimate coefficients. Default is ols (ordinal least squares).
+#' @usage MultiWindow(y, window_list = c(100, 50, 20, 10, 5), point_max = 5,
+#'        prior_range = NULL, get_mle = GetMle, penalty=c("bic","aic","hq"),
+#'        seg_min = 1, num_init = "sqrt", tolerance = 1)
 #'
+#' MultiWindow(y, window_list = c(100, 50, 20, 10, 5),
+#'        prior_range = prior_range=list(c(30,200),c(220,400)),
+#'        get_mle = GetMle, penalty=c("bic","aic","hq"),
+#'        seg_min = 1, num_init = "sqrt", tolerance = 1)
 #' @return A list of following elements:
 #'         n_peak_range: The number of peak ranges.
 #'         peak_ranges: The location of peak ranges.
@@ -61,8 +65,8 @@
 #'     y[n] = y[(n-1):(n-L)] %*% a3 + c3 + rnorm(1)
 #'   }
 #' }
-#' MultiWindow(y,window_list=c(100,50,20,10,5),point_max=4,L=2,seg_min=1,tolerance=1, method="ols")
-#' MultiWindow(y,window_list=c(100,50,20,10,5),point_max=3,prior_range=list(c(30,200),c(220,400)),L=2,seg_min=1,tolerance=1, method="ols")
+#' MultiWindow(y,window_list=c(100,50,20,10,5),point_max=5)
+#' MultiWindow(y,window_list=c(100,50,20,10,5),prior_range=list(c(30,200),c(220,400)))
 MultiWindow <- function(y,
                         window_list = c(100,50,20,10,5),
                         point_max   = 5,
@@ -120,7 +124,7 @@ MultiWindow <- function(y,
       }
     }
   }
-  peakranges<-PeakRange(score=score,tolerance=tolerance,point_max=point_max)
+  peakranges <- PeakRange(score=score,tolerance=tolerance,point_max=point_max)
   return(peakranges)
   #return(score)
 }
