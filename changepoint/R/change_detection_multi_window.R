@@ -63,63 +63,63 @@
 #' }
 #' MultiWindow(x,window_list=c(100,50,20,10,5),point_max=4,L=2,seg_min=1,tolerance=1, method="ols")
 #' MultiWindow(x,window_list=c(100,50,20,10,5),point_max=3,prior_range=list(c(30,200),c(220,400)),L=2,seg_min=1,tolerance=1, method="ols")
-MultiWindow=function(x,window_list=c(100,50,20,10,5),point_max=5,prior_range=NULL,L=2,penalty=expression(log(dim(x_transformed)[1])),seg_min=1,num_init=expression(sqrt(dim(x_transformed)[1])),tolerance=1, method="ols") {
-    len=length(x)
-    n_window_type = length(window_list)
+MultiWindow<-function(x,window_list=c(100,50,20,10,5),point_max=5,prior_range=NULL,L=2,penalty=expression(log(dim(x_transformed)[1])),seg_min=1,num_init=expression(sqrt(dim(x_transformed)[1])),tolerance=1, method="ols") {
+    len<-length(x)
+    n_window_type <- length(window_list)
     #initialize score matrix
-    score=matrix(0,nrow=len,ncol=n_window_type)
+    score<-matrix(0,nrow=len,ncol=n_window_type)
     for (r in 1:n_window_type) {
         #test
         #r=5
         #test
-        window_size = window_list[r]
-        n_window = ceiling(len/window_size)
+        window_size <- window_list[r]
+        n_window <- ceiling(len/window_size)
         # Get transformed approximated independent data
-        x_transformed=GetMle(x,window_size=window_size,L=L,method="ols")
+        x_transformed<-GetMle(x,window_size=window_size,L=L,method="ols")
         # if the data is a list, transform it into matrix
         if (class(x_transformed) != "matrix") {
-            x_transformed=as.matrix(x_transformed)
+            x_transformed<-as.matrix(x_transformed)
         }
         if (is.null(prior_range)) {
           #test
           #print("changePoints")
           #test
           # Get the change points of transformed data
-          changePoints=ChangePoints(x_transformed,point_max=point_max,penalty=eval(penalty),seg_min=1,num_init=eval(num_init))$changepoints
+          changePoints<-ChangePoints(x_transformed,point_max=point_max,penalty=eval(penalty),seg_min=1,num_init=eval(num_init))$changepoints
         } else {
           # Transform prior_range to transformed_range according to window size
-          prior_range_x=list()
+          prior_range_x<-list()
           for (i in 1:length(prior_range)) {
-            transformed_range[1]=ceiling(prior_range[[i]][1]/window_size)
-            transformed_range[2]=ceiling(prior_range[[i]][2]/window_size)
-            prior_range_x[[i]]=transformed_range
+            transformed_range[1]<-ceiling(prior_range[[i]][1]/window_size)
+            transformed_range[2]<-ceiling(prior_range[[i]][2]/window_size)
+            prior_range_x[[i]]<-transformed_range
           }
           #test
           #print("range")
           #print(dim(x_transformed))
           #test
-          changePoints=PriorRangeOrderKmeans(x_transformed,prior_range_x=prior_range_x,num_init=eval(num_init))$changepoints
+          changePoints<-PriorRangeOrderKmeans(x_transformed,prior_range_x=prior_range_x,num_init=eval(num_init))$changepoints
         }
         # Map the change points of transformed data to original data and get score the change points.
         # don't score the last number of change points, which is the last number of transformed data
         if (length(changePoints) == 1) {
             if (r!=1) {
-                score[1:len,r]=score[1:len,r-1]
+                score[1:len,r]<-score[1:len,r-1]
             }
         } else {
             if (r==1){
                 for (k in 1:(length(changePoints)-1)) {
-                    score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]=score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]+1
+                    score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]<-score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]+1
                 }
             } else {
-                score[1:len,r]=score[1:len,r-1]
+                score[1:len,r]<-score[1:len,r-1]
                 for (k in 1:(length(changePoints)-1)) {
-                    score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]=score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),(r-1)]+1
+                    score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]<-score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),(r-1)]+1
                 }
             }
         }
     }
-    peakranges=PeakRange(score=score,tolerance=tolerance,point_max=point_max)
+    peakranges<-PeakRange(score=score,tolerance=tolerance,point_max=point_max)
     return(peakranges)
     #return(score)
 }
