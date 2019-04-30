@@ -63,7 +63,16 @@
 #' }
 #' MultiWindow(y,window_list=c(100,50,20,10,5),point_max=4,L=2,seg_min=1,tolerance=1, method="ols")
 #' MultiWindow(y,window_list=c(100,50,20,10,5),point_max=3,prior_range=list(c(30,200),c(220,400)),L=2,seg_min=1,tolerance=1, method="ols")
-MultiWindow <- function(y,window_list=c(100,50,20,10,5),point_max=5,prior_range=NULL,L=2,penalty="bic",seg_min=1,num_init="sqrt",tolerance=1, method="ols") {
+MultiWindow <- function(y,
+                        window_list = c(100,50,20,10,5),
+                        point_max   = 5,
+                        prior_range = NULL,
+                        get_mle     = GetMle,
+                        penalty     = "bic",
+                        seg_min     = 1,
+                        num_init    = "sqrt",
+                        tolerance   = 1,
+                        method      = "ols") {
   len <- length(y)
   n_window_type <- length(window_list)
   #initialize score matrix
@@ -75,7 +84,7 @@ MultiWindow <- function(y,window_list=c(100,50,20,10,5),point_max=5,prior_range=
     window_size <- window_list[r]
     n_window <- ceiling(len/window_size)
     # Get transformed approximated independent data
-    x <- GetMle(y,window_size=window_size,L=L,method="ols")
+    x <- GetMle(y, window_size=window_size)
     # if the data is a list, transform it into matrix
     if (class(x) != "matrix") {
       x <- as.matrix(x)
@@ -103,10 +112,10 @@ MultiWindow <- function(y,window_list=c(100,50,20,10,5),point_max=5,prior_range=
     # Map the change points of transformed data to original data and get score the change points.
     if (r==1){
       for (k in 1:(length(changePoints))) {
-        score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]<-score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]+1
+        score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1) * window_size,len),r]<-score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]+1
       }
     } else {
-      score[1:len,r]<-score[1:len,r-1]
+      score[1:len,r] <- score[1:len,r-1]
       for (k in 1:(length(changePoints))) {
         score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]<-score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),(r-1)]+1
       }
