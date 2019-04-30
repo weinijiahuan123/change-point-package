@@ -2,7 +2,7 @@
 #'
 #' Use a sequence of window sizes to capture ranges of change points.
 #'
-#' Given time series data x1,x2...xN, a sequence of window sizes w1 > ... > wR
+#' Given time series data y1,y2...yN, a sequence of window sizes w1 > ... > wR
 #' can be used to capture any true segment of small size. For each wr, the
 #' original data is turned into a sequence of L + 1 dimensional data that can
 #' be approximated as independent. Then the change points of independent data
@@ -20,7 +20,7 @@
 #' Fast Implementation and Strong Consistency}. IEEE Transactions on Signal
 #' Processing, vol. 65, no. 17, pp. 4495-4510, 2017.
 #'
-#' @param x The original data to find change points. Must be one dimensional data
+#' @param y The original data to find change points. Must be one dimensional data
 #' @param window_list The list of window sizes, must be in form c(100,50,20,10,5),
 #'         in descending order and each window_size > 2L.
 #' @param point_max The largest candidate number of change points.
@@ -48,78 +48,71 @@
 #' a1 = c(0.8, -0.3); c1 = 0
 #' a2 = c(-0.5, 0.1); c2 = 0
 #' a3 = c(0.5, -0.5); c3 = 0
-#' x = rep(0,N)
+#' y = rep(0,N)
 #' L=2
-#' x[1:L] = rnorm(L)
+#' y[1:L] = rnorm(L)
 #' for (n in (L+1):N){
 #'   if (n <= N1) {
-#'     x[n] = x[(n-1):(n-L)] %*% a1 + c1 + rnorm(1)
+#'     y[n] = y[(n-1):(n-L)] %*% a1 + c1 + rnorm(1)
 #'   } else if (n <= (N1+N2)) {
-#'     x[n] = x[(n-1):(n-L)] %*% a2 + c2 + rnorm(1)
+#'     y[n] = y[(n-1):(n-L)] %*% a2 + c2 + rnorm(1)
 #'   }
 #'   else {
-#'     x[n] = x[(n-1):(n-L)] %*% a3 + c3 + rnorm(1)
+#'     y[n] = y[(n-1):(n-L)] %*% a3 + c3 + rnorm(1)
 #'   }
 #' }
-#' MultiWindow(x,window_list=c(100,50,20,10,5),point_max=4,L=2,seg_min=1,tolerance=1, method="ols")
-#' MultiWindow(x,window_list=c(100,50,20,10,5),point_max=3,prior_range=list(c(30,200),c(220,400)),L=2,seg_min=1,tolerance=1, method="ols")
-MultiWindow<-function(x,window_list=c(100,50,20,10,5),point_max=5,prior_range=NULL,L=2,penalty=expression(log(dim(x_transformed)[1])),seg_min=1,num_init=expression(sqrt(dim(x_transformed)[1])),tolerance=1, method="ols") {
-    len<-length(x)
-    n_window_type <- length(window_list)
-    #initialize score matrix
-    score<-matrix(0,nrow=len,ncol=n_window_type)
-    for (r in 1:n_window_type) {
-        #test
-        #r=5
-        #test
-        window_size <- window_list[r]
-        n_window <- ceiling(len/window_size)
-        # Get transformed approximated independent data
-        x_transformed<-GetMle(x,window_size=window_size,L=L,method="ols")
-        # if the data is a list, transform it into matrix
-        if (class(x_transformed) != "matrix") {
-            x_transformed<-as.matrix(x_transformed)
-        }
-        if (is.null(prior_range)) {
-          #test
-          #print("changePoints")
-          #test
-          # Get the change points of transformed data
-          changePoints<-ChangePoints(x_transformed,point_max=point_max,penalty=eval(penalty),seg_min=1,num_init=eval(num_init))$changepoints
-        } else {
-          # Transform prior_range to transformed_range according to window size
-          prior_range_x<-list()
-          for (i in 1:length(prior_range)) {
-            transformed_range[1]<-ceiling(prior_range[[i]][1]/window_size)
-            transformed_range[2]<-ceiling(prior_range[[i]][2]/window_size)
-            prior_range_x[[i]]<-transformed_range
-          }
-          #test
-          #print("range")
-          #print(dim(x_transformed))
-          #test
-          changePoints<-PriorRangeOrderKmeans(x_transformed,prior_range_x=prior_range_x,num_init=eval(num_init))$changepoints
-        }
-        # Map the change points of transformed data to original data and get score the change points.
-        # don't score the last number of change points, which is the last number of transformed data
-        if (length(changePoints) == 1) {
-            if (r!=1) {
-                score[1:len,r]<-score[1:len,r-1]
-            }
-        } else {
-            if (r==1){
-                for (k in 1:(length(changePoints)-1)) {
-                    score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]<-score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]+1
-                }
-            } else {
-                score[1:len,r]<-score[1:len,r-1]
-                for (k in 1:(length(changePoints)-1)) {
-                    score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]<-score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),(r-1)]+1
-                }
-            }
-        }
+#' MultiWindow(y,window_list=c(100,50,20,10,5),point_max=4,L=2,seg_min=1,tolerance=1, method="ols")
+#' MultiWindow(y,window_list=c(100,50,20,10,5),point_max=3,prior_range=list(c(30,200),c(220,400)),L=2,seg_min=1,tolerance=1, method="ols")
+MultiWindow <- function(y,window_list=c(100,50,20,10,5),point_max=5,prior_range=NULL,L=2,penalty="bic",seg_min=1,num_init="sqrt",tolerance=1, method="ols") {
+  len <- length(y)
+  n_window_type <- length(window_list)
+  #initialize score matrix
+  score <- matrix(0,nrow=len,ncol=n_window_type)
+  for (r in 1:n_window_type) {
+    #test
+    #r=1
+    #test
+    window_size <- window_list[r]
+    n_window <- ceiling(len/window_size)
+    # Get transformed approximated independent data
+    x <- GetMle(y,window_size=window_size,L=L,method="ols")
+    # if the data is a list, transform it into matrix
+    if (class(x) != "matrix") {
+      x <- as.matrix(x)
     }
-    peakranges<-PeakRange(score=score,tolerance=tolerance,point_max=point_max)
-    return(peakranges)
-    #return(score)
+    if (is.null(prior_range)) {
+      #test
+      #print("changePoints")
+      #test
+      # Get the change points of transformed data
+      changePoints <- ChangePoints(x,point_max=point_max,penalty=penalty,seg_min=1,num_init=num_init)$changepoints
+    } else {
+      # Transform prior_range to transformed_range according to window size
+      trans_prior_range <- list()
+      for (i in 1:length(prior_range)) {
+        transformed_range[1] <- ceiling(prior_range[[i]][1]/window_size)
+        transformed_range[2] <- ceiling(prior_range[[i]][2]/window_size)
+        trans_prior_range[[i]] <- transformed_range
+      }
+      #test
+      #print("range")
+      #print(dim(x_transformed))
+      #test
+      changePoints<-PriorRangeOrderKmeans(x,prior_range_x=trans_prior_range,num_init=num_init)$changepoints
+    }
+    # Map the change points of transformed data to original data and get score the change points.
+    if (r==1){
+      for (k in 1:(length(changePoints))) {
+        score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]<-score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]+1
+      }
+    } else {
+      score[1:len,r]<-score[1:len,r-1]
+      for (k in 1:(length(changePoints))) {
+        score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),r]<-score[(1+(changePoints[k]-1)*window_size):min((changePoints[k]+1)*window_size,len),(r-1)]+1
+      }
+    }
+  }
+  peakranges<-PeakRange(score=score,tolerance=tolerance,point_max=point_max)
+  return(peakranges)
+  #return(score)
 }
