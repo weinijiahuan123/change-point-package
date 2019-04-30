@@ -19,11 +19,11 @@
 #'         n_peak_range: The number of peak ranges.
 #'         peak_ranges: The location of peak ranges.
 #' @export
-PeakRange=function(score,tolerance=1,point_max=4) {
-    N=dim(score)[1]
-    R=dim(score)[2]
+PeakRange<-function(score,tolerance=1,point_max=4) {
+    N<-dim(score)[1]
+    R<-dim(score)[2]
     # compute the hightest score
-    S=max(score)
+    S<-max(score)
     # in case the tolerance is negative number
     if (tolerance < 0) {
       stop("Tolerance can't be negative!")
@@ -33,24 +33,24 @@ PeakRange=function(score,tolerance=1,point_max=4) {
       warning("Tolerance is too large!")
     }
     for (r in R:1) {
-        J=list()
+        J<-list()
         # store number of unions
-        num=0
+        num<-0
         #test
         #r=4
         #test
         if (score[1,r]>=S-tolerance) {
-            num=num+1
-            J[[num]]=1
+            num<-num+1
+            J[[num]]<-1
         }
         for (i in 2:N) {
             if (score[i,r]>=S-tolerance) {
                 # update the number of unions when meet new union
                 if (score[i,r]!=score[i-1,r]) {
-                    num=num+1
-                    J[[num]]=i
+                    num<-num+1
+                    J[[num]]<-i
                 } else {
-                    J[[num]]=c(J[[num]],i)
+                    J[[num]]<-c(J[[num]],i)
                 }
             }
 
@@ -60,6 +60,6 @@ PeakRange=function(score,tolerance=1,point_max=4) {
             break
         }
     }
-    optimal=list(n_peak_range=num,peak_ranges=J)
+    optimal<-list(n_peak_range=num,peak_ranges=J)
     return(optimal)
 }
