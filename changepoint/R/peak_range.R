@@ -19,47 +19,46 @@
 #'         n_peak_range: The number of peak ranges.
 #'         peak_ranges: The location of peak ranges.
 #' @export
-PeakRange<-function(score,tolerance=1,point_max=4) {
-    N<-dim(score)[1]
-    R<-dim(score)[2]
-    # compute the hightest score
-    S<-max(score)
-    # in case the tolerance is negative number
-    if (tolerance < 0) {
-      stop("Tolerance can't be negative!")
+PeakRange<-function(score,tolerance=1,point_max=5) {
+  N<-dim(score)[1]
+  R<-dim(score)[2]
+  # compute the hightest score
+  S<-max(score)
+  # in case the tolerance is negative number
+  if (tolerance < 0) {
+    stop("Tolerance can't be negative!")
+  }
+  # Warning if tolerance is larger than S
+  if (tolerance > S) {
+    warning("Tolerance is too large!")
+  }
+  for (r in R:1) {
+    J<-list()
+    # store number of unions
+    num<-0
+    #test
+    #r=4
+    #test
+    if (score[1,r]>=S-tolerance) {
+      num<-num+1
+      J[[num]]<-1
     }
-    # Warning if tolerance is larger than S
-    if (tolerance > S) {
-      warning("Tolerance is too large!")
+    for (i in 2:N) {
+      if (score[i,r]>=S-tolerance) {
+        # update the number of unions when meet new union
+        if (score[i,r]!=score[i-1,r]) {
+          num<-num+1
+          J[[num]]<-i
+        } else {
+          J[[num]]<-c(J[[num]],i)
+        }
+      }
     }
-    for (r in R:1) {
-        J<-list()
-        # store number of unions
-        num<-0
-        #test
-        #r=4
-        #test
-        if (score[1,r]>=S-tolerance) {
-            num<-num+1
-            J[[num]]<-1
-        }
-        for (i in 2:N) {
-            if (score[i,r]>=S-tolerance) {
-                # update the number of unions when meet new union
-                if (score[i,r]!=score[i-1,r]) {
-                    num<-num+1
-                    J[[num]]<-i
-                } else {
-                    J[[num]]<-c(J[[num]],i)
-                }
-            }
-
-        }
-        # when the number of unions meet the requirement of largest number of change points, end the loop
-        if (num<=point_max) {
-            break
-        }
+    # when the number of unions meet the requirement of largest number of change points, end the loop
+    if (num<=point_max) {
+      break
     }
-    optimal<-list(n_peak_range=num,peak_ranges=J)
-    return(optimal)
+  }
+  optimal<-list(n_peak_range=num,peak_ranges=J)
+  return(optimal)
 }
