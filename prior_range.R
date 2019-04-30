@@ -8,7 +8,7 @@ l2=c(75,100)
 prior_range_x=list(l1,l2)
 PriorRangeOrderKmeans(x,prior_range_x=list(l1,l2))
 #test
-#K changepoints 
+#K changepoints
 PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
   if (class(x) != "matrix") {
     stop("Dataset must be matrix form!")
@@ -17,7 +17,7 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
   D<-dim(x)[2] # dimension of each observation
   #There are K change points
   K<-length(prior_range_x)
-  #There are M segments 
+  #There are M segments
   M<-K+1
   # Change points number error handling
   if (N < M) {
@@ -25,7 +25,7 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
   } else if (M == 1) {
     stop("No change point!")
   }
- 
+
   # randomize initial change points several times to avoid local optima
   best_wgss<-Inf
   # set the random initialization times
@@ -44,28 +44,28 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
     mean_each<-matrix(0,nrow=M,ncol=D)
 
     # initialize change points
-    changePoints<-numeric(M)
-    changePoints[M]<-N
+    change_point<-numeric(M)
+    change_point[M]<-N
     for (i in 1:K) {
-      changePoints[i]<-floor(prior_range_x[[i]][1]+(prior_range_x[[i]][2]-prior_range_x[[i]][1])*runif(1))
+      change_point[i]<-floor(prior_range_x[[i]][1]+(prior_range_x[[i]][2]-prior_range_x[[i]][1])*runif(1))
     }
 
     # initialize for each segment the number of points, within segment sum of squares, and mean
-    num_each[1] <- changePoints[1]
-    wgss_each[1,] <- apply(matrix(x[1:changePoints[1],],ncol=D),2,var) * (num_each[1]-1)
+    num_each[1] <- change_point[1]
+    wgss_each[1,] <- apply(matrix(x[1:change_point[1],],ncol=D),2,var) * (num_each[1]-1)
     if (num_each[1]==1) {
       wgss_each[1,]<-matrix(0,nrow=1,ncol=D)
     }
-    mean_each[1,] <- apply(matrix(x[1:changePoints[1],],ncol=D),2,mean)
+    mean_each[1,] <- apply(matrix(x[1:change_point[1],],ncol=D),2,mean)
 
     for (i in 2:M) {
-      num_each[i] <- changePoints[i] - changePoints[i-1]
-      wgss_each[i,] <- apply(matrix(x[(changePoints[i-1]+1):changePoints[i],],ncol=D),2,var) * (num_each[i]-1)
+      num_each[i] <- change_point[i] - change_point[i-1]
+      wgss_each[i,] <- apply(matrix(x[(change_point[i-1]+1):change_point[i],],ncol=D),2,var) * (num_each[i]-1)
       # special case: one segment only contains one number, avoid get NA for variance
       if (num_each[i]==1) {
         wgss_each[i,]<-matrix(0,nrow=1,ncol=D)
       }
-      mean_each[i,] <- apply(matrix(x[(changePoints[i-1]+1):changePoints[i],],ncol=D),2,mean)
+      mean_each[i,] <- apply(matrix(x[(change_point[i-1]+1):change_point[i],],ncol=D),2,mean)
 
     }
     # scan the middle K-1 change points
@@ -76,20 +76,20 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
       #cat("i=",i,"\n")
       #cat("num_each=",num_each,"\n")
       #cat("num_each[i]=",num_each[i],"\n")
-      #cat("changePoints=",changePoints,"\n")
+      #cat("change_point=",change_point,"\n")
       #test
-      
+
       # consider if we should move the last part of segment i
       best_gain_sum <- -Inf
-      if ((changePoints[i]-prior_range_x[[i]][1])>0) {
+      if ((change_point[i]-prior_range_x[[i]][1])>0) {
 
         # scan all possible part that can be transformed form segment i to i+1
-        for (ell in 1:(changePoints[i]-prior_range_x[[i]][1])) {
+        for (ell in 1:(change_point[i]-prior_range_x[[i]][1])) {
           #test
           #cat("ell=",ell,"\n")
           #test
 
-          mean_candidatePart<-apply(matrix(x[(changePoints[i]-ell+1):changePoints[i],],ncol=D),2,mean)
+          mean_candidatePart<-apply(matrix(x[(change_point[i]-ell+1):change_point[i],],ncol=D),2,mean)
           # the descrease in wgss of segment i
           decrease<-ell*num_each[i]/(num_each[i]-ell)*(mean_each[i,]-mean_candidatePart)^2
           # the increase in wgss of segment i+1
@@ -103,7 +103,7 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
             best_gain <- decrease - increase
             best_gain_sum <- sum(best_gain)
             best_ell <- ell
-            best_candidatePart <- matrix(x[(changePoints[i]-ell+1):changePoints[i],],ncol=D)
+            best_candidatePart <- matrix(x[(change_point[i]-ell+1):change_point[i],],ncol=D)
             #test
             #cat("best_candidatePart=",best_candidatePart,"\n")
             #cat("dim_candidate=",dim(best_candidatePart),"\n")
@@ -111,7 +111,7 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
             #test
             best_decrease <- decrease
             best_increase <- increase
-          
+
           }
         }
       }
@@ -125,14 +125,14 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
         best_mean_candidatePart <- apply(best_candidatePart,2,mean)
         mean_each[i,] <- (num_each[i]*mean_each[i,]-best_ell*best_mean_candidatePart)/(num_each[i]-best_ell)
         mean_each[i+1,] <- (num_each[i+1]*mean_each[i+1,]+best_ell*best_mean_candidatePart)/(num_each[i+1]+best_ell)
-        changePoints[i] <- changePoints[i] - best_ell
+        change_point[i] <- change_point[i] - best_ell
         num_each[i] <- num_each[i] - best_ell
         num_each[i+1] <- num_each[i+1] + best_ell
         wgss_part <- apply((best_candidatePart - matrix(best_mean_candidatePart,nrow=best_ell,ncol=D,byrow=TRUE))^2,2,sum)
         wgss_each[i,] <- wgss_each[i,] - best_decrease - wgss_part
         wgss_each[i+1,] <- wgss_each[i+1,] + best_increase + wgss_part
         #test
-        #cat("changePoints[i]",changePoints[i],"\n")
+        #cat("change_point[i]",change_point[i],"\n")
         #cat("num_each[i] =",num_each[i],"\n")
         #cat("num_each[i+1] =",num_each[i+1],"\n")
         #test
@@ -142,14 +142,14 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
         #test
         #cat("num_each[i+1]=",num_each[i+1],"\n")
         #test
-        if ((prior_range_x[[i]][2]-changePoints[i])>0) {
-          for (ell in 1:(prior_range_x[[i]][2]-changePoints[i])) {
+        if ((prior_range_x[[i]][2]-change_point[i])>0) {
+          for (ell in 1:(prior_range_x[[i]][2]-change_point[i])) {
             #test
             #ell=24
             #cat("ell=",ell,"\n")
             #test
             if (ell<num_each[i+1]) {
-              mean_candidatePart<-apply(matrix(x[(changePoints[i]+1):(changePoints[i]+ell),],ncol=D),2,mean)
+              mean_candidatePart<-apply(matrix(x[(change_point[i]+1):(change_point[i]+ell),],ncol=D),2,mean)
 
               decrease<-ell*num_each[i+1]/(num_each[i+1]-ell)*(mean_each[i+1,]-mean_candidatePart)^2
               increase<-ell*num_each[i]/(num_each[i]+ell)*(mean_each[i,]-mean_candidatePart)^2
@@ -161,7 +161,7 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
                 best_gain <- decrease - increase
                 best_gain_sum <- sum(best_gain)
                 best_ell <- ell
-                best_candidatePart <- matrix(x[(changePoints[i]+1):(changePoints[i]+ell),],ncol=D)
+                best_candidatePart <- matrix(x[(change_point[i]+1):(change_point[i]+ell),],ncol=D)
                 #test
                 #cat("best_candidatePart=",best_candidatePart,"\n")
                 #cat("dim_candidate=",dim(best_candidatePart),"\n")
@@ -180,14 +180,14 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
           best_mean_candidatePart <- apply(best_candidatePart,2,mean)
           mean_each[i+1,] <- (num_each[i+1]*mean_each[i+1,]-best_ell*best_mean_candidatePart)/(num_each[i+1]-best_ell)
           mean_each[i,] <- (num_each[i]*mean_each[i,]+best_ell*best_mean_candidatePart)/(num_each[i]+best_ell)
-          changePoints[i] <- changePoints[i] + best_ell
+          change_point[i] <- change_point[i] + best_ell
           num_each[i] <- num_each[i] + best_ell
           num_each[i+1] <- num_each[i+1] - best_ell
           wgss_part <- apply((best_candidatePart - matrix(best_mean_candidatePart,nrow=best_ell,ncol=D,byrow=TRUE))^2,2,sum)
           wgss_each[i,] <- wgss_each[i,] + best_decrease + wgss_part
           wgss_each[i+1,] <- wgss_each[i+1,] - best_increase - wgss_part
           #test
-          #cat("changePoints[i]",changePoints[i],"\n")
+          #cat("change_point[i]",change_point[i],"\n")
           #cat("num_each[i] =",num_each[i],"\n")
           #cat("num_each[i+1] =",num_each[i+1],"\n")
           #test
@@ -202,15 +202,15 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
   # store the smallest total wgss among several initializations.
   if (best_wgss>wgss_sum) {
     best_wgss<-wgss_sum
-    best_changepoints<-changePoints
+    best_change_point<-change_point
   }
   #print(wgss_sum)
-  #print(changePoints)
-  
+  #print(change_point)
+
   # Delete the last observation from change points
-  best_changepoints<-best_changepoints[-M]
-  
-  k_changepints<-list(num_changepoints=K,changepoints=best_changepoints)
-  return(k_changepints)
+  best_change_point<-best_change_point[-M]
+
+  k_change_point<-list(num_change_point=K,change_point=best_change_point)
+  return(k_change_point)
 }
 
