@@ -16,12 +16,13 @@
 #' @param penalty Penalty term. Default is "bic".
 #' @param seg_min Minimal segment size, must be positive integer.
 #' @param num_init The number of repetition times, in order to avoid local minimal.
+#'                 Default is squared root of number of observations.
 #'
 #' @usage ChangePoints(x,point_max=4,penalty=c("bic","aic","hq"),seg_min=2,
 #'       num_init="sqrt")
 #' @return A list with following elements:
-#'         M_hat: optimal number of change points.
-#'         changepoints_hat: location of change points.lag contains the number and location of change points.
+#'         num_change_point: optimal number of change points.
+#'         change_point: location of change points.
 #' @export
 #' @examples
 #' a=matrix(rnorm(40,mean=-1,sd=1),nrow=20,ncol=2)
@@ -31,7 +32,7 @@
 #' ChangePoints(x,point_max=5)
 #' ChangePoints(x,point_max=5,penalty="hq")
 
-ChangePoints <- function(x,point_max=4,penalty="bic",seg_min=1,num_init="sqrt"){
+ChangePoints <- function(x,point_max=5,penalty="bic",seg_min=1,num_init="sqrt"){
   N <- dim(x)[1]
   D <- dim(x)[2]
   #sigma2<-sum(apply(x,2,var))
@@ -46,7 +47,7 @@ ChangePoints <- function(x,point_max=4,penalty="bic",seg_min=1,num_init="sqrt"){
   # K = number of change points
 
   for (K in 1:point_max) {
-    K=3
+    #K=3
     res <- OrderKmeans(x,K,num_init=num_init)
     wgss <- res$wgss
     num_each <- res$num_each
@@ -99,8 +100,8 @@ ChangePoints <- function(x,point_max=4,penalty="bic",seg_min=1,num_init="sqrt"){
 #' Detect the location of change points based on minimizing within segment quadratic
 #' loss with fixed number of change points.
 #'
-#' The K change points form K segments (1 2 ... change_point(1)) ...
-#' (change_point(K-1)+1 ... change_point(K)=N).
+#' The K change points form K+1 segments (1 2 ... change_point(1)) ...
+#' (change_point(K) ... N).
 #'
 #' @references
 #' J. Ding, Y. Xiang, L. Shen, and V. Tarokh, \emph{Multiple Change Point Analysis:
@@ -109,10 +110,13 @@ ChangePoints <- function(x,point_max=4,penalty="bic",seg_min=1,num_init="sqrt"){
 #' @param x The data to find change points with dimension N x D, must be matrix
 #' @param K The number of change points.
 #' @param num_init The number of repetition times, in order to avoid local minimal.
-#'                 Default is squared root of number of observations
+#'                 Default is squared root of number of observations.
 #'
 #' @return A list contains following elements:
-#'         wgss: smallest within segment sum of squared distances to the segment mean.
+#'         wgss_sum: total within segment sum of squared distances to the segment
+#'                  mean (wgss) of all segments.
+#'         num_each:number of observations of each segment
+#'         wgss: total wgss of each segment.
 #'         change_point: location of optimal change points.
 #' @export
 #' @examples
