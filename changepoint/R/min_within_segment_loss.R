@@ -13,10 +13,12 @@
 #' Processing, vol. 65, no. 17, pp. 4495-4510, 2017.
 #' @param x The data to find change points.
 #' @param point_max The largest candidate number of change points.
-#' @param penalty Penalty term. Default is log(N).
+#' @param penalty Penalty term. Default is "bic".
 #' @param seg_min Minimal segment size, must be positive integer.
 #' @param num_init The number of repetition times, in order to avoid local minimal.
 #'
+#' @usage ChangePoints(x,point_max=4,penalty=c("bic","aic","hq"),seg_min=2,
+#'       num_init="sqrt")
 #' @return A list with following elements:
 #'         M_hat: optimal number of change points.
 #'         changepoints_hat: location of change points.lag contains the number and location of change points.
@@ -29,30 +31,33 @@
 #' ChangePoints(x,point_max=5)
 #' ChangePoints(x,point_max=5,penalty="hq")
 
-ChangePoints<-function(x,point_max=4,penalty="bic",seg_min=2,num_init="sqrt"){
-  N<-dim(x)[1]
-  D<-dim(x)[2]
+ChangePoints <- function(x,point_max=4,penalty="bic",seg_min=2,num_init="sqrt"){
+  N <- dim(x)[1]
+  D <- dim(x)[2]
   #sigma2<-sum(apply(x,2,var))
   #wgss_list=list()
   #wgss_list_penalty=list()
   wgss_llist_sigma=list()
   #wgss_llist_2sigma=list()
-  best_wgss_penalty<-Inf
+  best_wgss_penalty <- Inf
   # Make sure the number of change points is no larger than N-1.
-  point_max<-min(point_max,N-1)
+  point_max <- min(point_max,N-1)
 
   # K = number of change points
 
   for (K in 1:point_max) {
-    #K=2
+    K=3
     res <- OrderKmeans(x,K,num_init=num_init)
     wgss <- res$wgss
     num_each <- res$num_each
     changepoints <- res$changepoints
     #if size of the smallest segment is less than minimal segment size, end the loop
-    if (min(num_each)<seg_min) {
+    if (min(num_each) < seg_min) {
       break
     }
+    #cat("wgss",wgss,"\n")
+    #cat("num",num_each,"\n")
+
     #get the within segment sum of residual plus penalty
     #wgss_list=c(wgss_list,wgss)
     #wgss_penalty_new=wgss+K*penalty
@@ -73,10 +78,10 @@ ChangePoints<-function(x,point_max=4,penalty="bic",seg_min=2,num_init="sqrt"){
 
     #if the new wgss plus penalty is smaller than the previous one, store the new value,
     #get the smallest wgss among different changepoint numbers
-    if (wgss_penalty<best_wgss_penalty) {
-      best_wgss_penalty<-wgss_penalty
-      best_changepoints<-changepoints
-      best_num<-K
+    if (wgss_penalty < best_wgss_penalty) {
+      best_wgss_penalty <- wgss_penalty
+      best_changepoints <- changepoints
+      best_num <- K
     }
   }
   # test
@@ -85,7 +90,7 @@ ChangePoints<-function(x,point_max=4,penalty="bic",seg_min=2,num_init="sqrt"){
   #print(wgss_llist_sigma)
   #print(wgss_llist_2sigma)
   # test
-  m_changepoints<-list(num_changepoints=best_num,changepoints=best_changepoints)
+  m_changepoints <- list(num_changepoints=best_num,changepoints=best_changepoints)
   return(m_changepoints)
 }
 
@@ -246,14 +251,20 @@ OrderKmeans <- function(x, K=4, num_init="sqrt") {
           changePoints[i] <- changePoints[i] - best_ell
           num_each[i] <- num_each[i] - best_ell
           num_each[i+1] <- num_each[i+1] + best_ell
-          wgss_part <- apply((best_candidatePart - matrix(best_mean_candidatePart,nrow=best_ell,ncol=D,byrow=TRUE))^2,2,sum)
-          wgss_each[i,] <- wgss_each[i,] - best_decrease - wgss_part
-          wgss_each[i+1,] <- wgss_each[i+1,] + best_increase + wgss_part
-          #if (i == 1) {
-          #  wgss_each[i,] <- apply(matrix(x[1:changePoints[i],],ncol=D),2,var) * (num_each[i]-1)
-          #} else {
-          #  wgss_each[i,] <- apply(matrix(x[(changePoints[i-1]+1):changePoints[i],],ncol=D),2,var) * (num_each[i]-1)
-          #}
+          #wgss_part <- apply((best_candidatePart - matrix(best_mean_candidatePart,nrow=best_ell,ncol=D,byrow=TRUE))^2,2,sum)
+          #wgss_each[i,] <- wgss_each[i,] - best_decrease - wgss_part
+          #wgss_each[i+1,] <- wgss_each[i+1,] + best_increase + wgss_part
+          if (i == 1) {
+            wgss_each[i, ] <- apply(matrix(x[1:changePoints[i],],ncol=D),2,var) * (num_each[i]-1)
+          } else {
+            wgss_each[i,] <- apply(matrix(x[(changePoints[i-1]+1):changePoints[i],],ncol=D),2,var) * (num_each[i]-1)
+          }
+          if (num_each[i]==1) {
+            wgss_each[i,]<-matrix(0,nrow=num_each[i],ncol=D)
+          }
+          if (num_each[i+1]==1) {
+            wgss_each[i+1,]<-matrix(0,nrow=num_each[i+1],ncol=D)
+          }
           #wgss_each[i+1,] <- apply(matrix(x[(changePoints[i]+1):changePoints[i+1],],ncol=D),2,var) * (num_each[i+1]-1)
           #test
           #cat("changePoints[i]",changePoints[i],"\n")
@@ -303,9 +314,20 @@ OrderKmeans <- function(x, K=4, num_init="sqrt") {
             changePoints[i] <- changePoints[i] + best_ell
             num_each[i] <- num_each[i] + best_ell
             num_each[i+1] <- num_each[i+1] - best_ell
-            wgss_part <- apply((best_candidatePart - matrix(best_mean_candidatePart,nrow=best_ell,ncol=D,byrow=TRUE))^2,2,sum)
-            wgss_each[i,] <- wgss_each[i,] + best_decrease + wgss_part
-            wgss_each[i+1,] <- wgss_each[i+1,] - best_increase - wgss_part
+            #wgss_part <- apply((best_candidatePart - matrix(best_mean_candidatePart,nrow=best_ell,ncol=D,byrow=TRUE))^2,2,sum)
+            #wgss_each[i,] <- wgss_each[i,] + best_decrease + wgss_part
+            #wgss_each[i+1,] <- wgss_each[i+1,] - best_increase - wgss_part
+            if (i == 1) {
+              wgss_each[i, ] <- apply(matrix(x[1:changePoints[i],],ncol=D),2,var) * (num_each[i]-1)
+            } else {
+              wgss_each[i,] <- apply(matrix(x[(changePoints[i-1]+1):changePoints[i],],ncol=D),2,var) * (num_each[i]-1)
+            }
+            if (num_each[i]==1) {
+              wgss_each[i,]<-matrix(0,nrow=num_each[i],ncol=D)
+            }
+            if (num_each[i+1]==1) {
+              wgss_each[i+1,]<-matrix(0,nrow=num_each[i+1],ncol=D)
+            }
             #test
             #cat("changePoints[i]",changePoints[i],"\n")
             #cat("num_each[i] =",num_each[i],"\n")
