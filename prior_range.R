@@ -6,7 +6,7 @@ x=rbind(a,b,c)
 l1=c(15,25)
 l2=c(75,100)
 prior_range_x=list(l1,l2)
-PriorRange(x,prior_range_x=list(l1,l2),num_init = 1)
+PriorRangeOrderKmeans(x,prior_range_x=list(l1,l2))
 #test
 #K changepoints 
 PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
@@ -15,17 +15,19 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
   }
   N=dim(x)[1] # number of observations
   D=dim(x)[2] # dimension of each observation
-  #There are K segments 
-  K=length(prior_range_x)+1
+  #There are K change points
+  K=length(prior_range_x)
+  #There are M segments 
+  M=K+1
   # Change points number error handling
   #test
   #print(N)
   #print(K)
   #test
-  if (N < K) {
+  if (N < M) {
     stop("Change point number too large or Input dimension error!")
   }
-  if (N == K) {
+  if (N == M) {
     k_changepints=list(wgss=0,changepoints=as.numeric(seq(K)))
     return(k_changepints)
   }
@@ -36,25 +38,25 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
     #cat("j=",j,"\n")
     #test
 
-    # Special case: only have one change point
-    if (K==1) {
-      changePoints = N
-      num_each=N
-      wgss=var(x)*(N-1)
+    # Special case: only have one segment
+    if (M==1) {
+      changePoints <- N
+      num_each <- N
+      wgss <- apply(x,2,var) * (N-1)
       if (N==1) {
-        wgss=matrix(0,nrow=1,ncol=D)
+        wgss <- matrix(0,nrow=1,ncol=D)
       }
     } else {
       # store the within segment sum of squared distances to the segment mean (wgss)
       # in each dimension in each segment
-      num_each=matrix(0,nrow=K,ncol=1)
-      wgss_each=matrix(0,nrow=K,ncol=D)
-      mean_each=matrix(0,nrow=K,ncol=D)
+      num_each=matrix(0,nrow=M,ncol=1)
+      wgss_each=matrix(0,nrow=M,ncol=D)
+      mean_each=matrix(0,nrow=M,ncol=D)
 
       # initialize change points
-      changePoints=numeric(K)
-      changePoints[K]=N
-      for (i in 1:(K-1)) {
+      changePoints=numeric(M)
+      changePoints[M]=N
+      for (i in 1:K) {
         changePoints[i]=floor(prior_range_x[[i]][1]+(prior_range_x[[i]][2]-prior_range_x[[i]][1])*runif(1))
       }
 
@@ -66,7 +68,7 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
       }
       mean_each[1,] = apply(matrix(x[1:changePoints[1],],ncol=D),2,mean)
 
-      for (i in 2:K) {
+      for (i in 2:M) {
         num_each[i] = changePoints[i] - changePoints[i-1]
         wgss_each[i,] = apply(matrix(x[(changePoints[i-1]+1):changePoints[i],],ncol=D),2,var) * (num_each[i]-1)
         # special case: one segment only contains one number, avoid get NA for variance
@@ -78,7 +80,7 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
       }
       # scan the middle K-1 change points
       # suppose that we are at the crossing of segments i and i+1
-      for (i in 1:(K-1)) {
+      for (i in 1:K) {
         #test
         #i=2
         #cat("i=",i,"\n")
@@ -215,7 +217,9 @@ PriorRangeOrderKmeans=function(x,prior_range_x,num_init=sqrt(dim(x)[1])) {
     #print(wgss_sum)
     #print(changePoints)
   }
-
+  # Delete the last observation from change points
+  best_changepoints=best_changepoints[-M]
+  
   k_changepints=list(num_changepoints=K,changepoints=best_changepoints)
   return(k_changepints)
 }
