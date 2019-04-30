@@ -38,10 +38,10 @@ ChangePoints<-function(x,point_max=4,penalty="bic",seg_min=2,num_init="sqrt"){
   wgss_llist_sigma=list()
   #wgss_llist_2sigma=list()
   best_wgss_penalty<-Inf
-  # Make sure the number of change points is no larger than the number of observations.
-  point_max<-min(point_max,N)
+  # Make sure the number of change points is no larger than N-1.
+  point_max<-min(point_max,N-1)
 
-  # K = number of segments
+  # K = number of change points
 
   for (K in 1:point_max) {
     #K=2
@@ -82,7 +82,7 @@ ChangePoints<-function(x,point_max=4,penalty="bic",seg_min=2,num_init="sqrt"){
   # test
   #print(wgss_list)
   #print(wgss_list_penalty)
-  print(wgss_llist_sigma)
+  #print(wgss_llist_sigma)
   #print(wgss_llist_2sigma)
   # test
   m_changepoints<-list(num_changepoints=best_num,changepoints=best_changepoints)
@@ -116,7 +116,7 @@ ChangePoints<-function(x,point_max=4,penalty="bic",seg_min=2,num_init="sqrt"){
 #' c=matrix(rnorm(40,mean=1,sd=1),nrow=20,ncol=2)
 #' x=rbind(a,b,c)
 #' OrderKmeans(x,K=3)
-#' OrderKmeans(x,K=3,num_init=2*sqrt(dim(x)[1]))
+#' OrderKmeans(x,K=3,num_init="sqrt")
 OrderKmeans <- function(x, K=4, num_init="sqrt") {
   if (class(x) != "matrix") {
     stop("Dataset must be matrix form!")
