@@ -39,10 +39,10 @@
 #' GetMle(x,window_size=100,L=2,method="mle")
 #' GetMle(x,window_size=100,L=2,method="ols")
 #' GetMle(x,window_size=100,L=2,method="yw")
-GetMle <- function(y, window_size) {
+GetMleAr <- function(y, window_size) {
   N <- length(y)
   n_window <- ceiling(N/window_size)
-  L <- 2
+  L <- 1 # Lag order of the dataset
   x <- matrix(0, nrow = n_window, ncol = L+1)
   for (n in 1:n_window) {
     #test
@@ -51,11 +51,10 @@ GetMle <- function(y, window_size) {
     est <- ar(y[(1 + (n - 1) * window_size):min(n * window_size, N)], aic = FALSE, order.max = L, method = "ols")
     x[n, 1] <- est$x.intercept
     x[n, 2:(L + 1)] <- est$ar
-
 #    if (method == "ols") {
-#      est<-ar(x[(1+(n-1)*window_size):min(n*window_size,N)],aic=FALSE,order.max = L,method="ols")
-#      x_transformed[n,1]<-est$x.intercept
-#      x_transformed[n,2:(L+1)]<-est$ar
+#      est<-ar(y[(1+(n-1)*window_size):min(n*window_size,N)],aic=FALSE,order.max = L,method="ols")
+#      x[n,1]<-est$x.intercept
+#      x[n,2:(L+1)]<-est$ar
 #    }
 #    if (method == "mle") {
 #      est<-ar(x[(1+(n-1)*window_size):min(n*window_size,N)],aic=FALSE,order.max = L,method="mle")
@@ -70,3 +69,45 @@ GetMle <- function(y, window_size) {
   }
   return(x)
 }
+
+GetMle<- function(y, window_size) {
+  N <- length(y)
+  n_window <- ceiling(N/window_size)
+  L <- 2 # Lag order of the dataset
+  x <- matrix(0, nrow = n_window, ncol = L+1)
+  for (n in 1:n_window) {
+    #test
+    #test
+    #get estimated coefficients including constant
+    est <- EstimateAr(y,1+(n-1)*window_size,min(n*window_size,N),L)
+    #transform original data to transformed data which is the estimated coefficients
+    if (n==1) {
+      x <- t(est$C)
+    } else {
+      x <- rbind(x,t(est$C))
+    }
+  }
+  return(x)
+}
+
+EstimateAr=function(x,T1,T2,L){
+  if (T1>(T2-L)) {
+    warning("Error in estimate_ar")
+  }
+  if (T1<=L) {
+    T1=L+1
+  }
+  Y=matrix(0,nrow=L+1,ncol=T2-T1+1)
+  Y[1,]=1
+  for (k in 1:L) {
+    Y[k+1,]=x[(T1-k):(T2-k)]
+  }
+  A=Y%*%t(Y)
+  B=Y%*%x[T1:T2]
+  C=solve(A)%*%B
+  e=x[T1:T2]-t(Y)%*%C
+  sigma2=sum(e^2)/(T2-T1+1)
+  est_coef=list(C=C,sigma2=sigma2)
+  return(est_coef)
+}
+
