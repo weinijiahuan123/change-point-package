@@ -17,7 +17,7 @@
 #'
 #' @return A list of following:
 #'         n_peak_range: The number of peak ranges.
-#'         peak_ranges: The location of peak ranges.
+#'         peak_range: The location of peak ranges.
 #' @export
 PeakRange<-function(score,tolerance=1,point_max=5) {
   N<-dim(score)[1]
@@ -59,6 +59,6 @@ PeakRange<-function(score,tolerance=1,point_max=5) {
       break
     }
   }
-  optimal<-list(n_peak_range=num,peak_ranges=J)
+  optimal<-list(n_peak_range=num,peak_range=J)
   return(optimal)
 }
