@@ -40,7 +40,7 @@ GetMle<- function(y, window_size) {
   x <- matrix(0, nrow = n_window, ncol = L+1)
   EstimateAr <- function(x,T1,T2,L){
     if (T1 > (T2 - L)) {
-      warning("Error in estimate_ar")
+      stop("Lag is too big")
     }
     if (T1 <= L) {
       T1 <- L + 1
