@@ -38,24 +38,24 @@ GetMle<- function(y, window_size) {
   n_window <- ceiling(N/window_size)
   L <- 2 # Lag order of the dataset
   x <- matrix(0, nrow = n_window, ncol = L+1)
-  EstimateAr=function(x,T1,T2,L){
-    if (T1>(T2-L)) {
+  EstimateAr <- function(x,T1,T2,L){
+    if (T1 > (T2 - L)) {
       warning("Error in estimate_ar")
     }
-    if (T1<=L) {
-      T1=L+1
+    if (T1 <= L) {
+      T1 <- L + 1
     }
-    Y=matrix(0,nrow=L+1,ncol=T2-T1+1)
-    Y[1,]=1
+    Y <- matrix(0, nrow=L+1, ncol=T2-T1+1)
+    Y[1,] <- 1
     for (k in 1:L) {
-      Y[k+1,]=x[(T1-k):(T2-k)]
+      Y[k+1, ] <- x[(T1-k):(T2-k)]
     }
-    A=Y%*%t(Y)
-    B=Y%*%x[T1:T2]
-    C=solve(A)%*%B
-    e=x[T1:T2]-t(Y)%*%C
-    sigma2=sum(e^2)/(T2-T1+1)
-    est_coef=list(C=C,sigma2=sigma2)
+    A <- Y%*%t(Y)
+    B <- Y%*%x[T1:T2]
+    C <- solve(A)%*%B
+    e <- x[T1:T2]-t(Y)%*%C
+    sigma2 <- sum(e^2)/(T2-T1+1)
+    est_coef <- list(C=C,sigma2=sigma2)
     return(est_coef)
   }
   for (n in 1:n_window) {
