@@ -4,7 +4,7 @@
 \alias{PeakRange}
 \title{Peak Ranges Selection}
 \usage{
-PeakRange(score, tolerance = 1, point_max = 4)
+PeakRange(score, tolerance = 1, point_max = 5)
 }
 \arguments{
 \item{score}{The score data to peak ranges.}
@@ -16,7 +16,7 @@ PeakRange(score, tolerance = 1, point_max = 4)
 \value{
 A list of following:
         n_peak_range: The number of peak ranges.
-        peak_ranges: The location of peak ranges.
+        peak_range: The location of peak ranges.
 }
 \description{
 Select the narrow peak ranges.

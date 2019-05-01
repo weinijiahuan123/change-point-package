@@ -4,7 +4,7 @@
 \alias{OrderKmeans}
 \title{Detect Location of Change Points of Independent Data}
 \usage{
-OrderKmeans(x, K = 4, num_init = sqrt(dim(x)[1]))
+OrderKmeans(x, K = 4, num_init = "sqrt")
 }
 \arguments{
 \item{x}{The data to find change points with dimension N x D, must be matrix}
@@ -12,28 +12,31 @@ OrderKmeans(x, K = 4, num_init = sqrt(dim(x)[1]))
 \item{K}{The number of change points.}
 
 \item{num_init}{The number of repetition times, in order to avoid local minimal.
-Default is squared root of number of observations}
+Default is squared root of number of observations.}
 }
 \value{
 A list contains following elements:
-        wgss: smallest within segment sum of squared distances to the segment mean.
-        changepoints: location of optimal change points.
+        wgss_sum: total within segment sum of squared distances to the segment
+                 mean (wgss) of all segments.
+        num_each:number of observations of each segment
+        wgss: total wgss of each segment.
+        change_point: location of optimal change points.
 }
 \description{
 Detect the location of change points based on minimizing within segment quadratic
 loss with fixed number of change points.
 }
 \details{
-The K change points form K segments (1 2 ... change_point(1)) ...
-(change_point(K-1)+1 ... change_point(K)=N).
+The K change points form K+1 segments (1 2 ... change_point(1)) ...
+(change_point(K) ... N).
 }
 \examples{
-a=matrix(rnorm(40,mean=-1,sd=1),nrow=20,ncol=2)
-b=matrix(rnorm(120,mean=0,sd=1),nrow=60,ncol=2)
-c=matrix(rnorm(40,mean=1,sd=1),nrow=20,ncol=2)
-x=rbind(a,b,c)
+a<-matrix(rnorm(40,mean=-1,sd=1),nrow=20,ncol=2)
+b<-matrix(rnorm(120,mean=0,sd=1),nrow=60,ncol=2)
+c<-matrix(rnorm(40,mean=1,sd=1),nrow=20,ncol=2)
+x<-rbind(a,b,c)
 OrderKmeans(x,K=3)
-OrderKmeans(x,K=3,num_init=2*sqrt(dim(x)[1]))
+OrderKmeans(x,K=3,num_init="sqrt")
 }
 \references{
 J. Ding, Y. Xiang, L. Shen, and V. Tarokh, \emph{Multiple Change Point Analysis:
