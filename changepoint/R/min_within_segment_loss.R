@@ -1,34 +1,32 @@
 #' Detect Number and Location of Change Points of Independent Data
 #'
 #' Detect the number and locations of change points based on minimizing within
-#' segment quadratic loss and applying penalized model selection approach
-#' with restriction of largest candidate number of change points.
+#' segment quadratic loss and applying penalized model selection approach with
+#' restriction of largest candidate number of change points.
 #'
 #' The K change points form K+1 segments (1 2 ... change_point(1)) ...
 #' (change_point(K) ... N).
 #'
-#' @references
-#' J. Ding, Y. Xiang, L. Shen, and V. Tarokh, \emph{Multiple Change Point Analysis:
-#' Fast Implementation and Strong Consistency}. IEEE Transactions on Signal
-#' Processing, vol. 65, no. 17, pp. 4495-4510, 2017.
+#' @references J. Ding, Y. Xiang, L. Shen, and V. Tarokh, \emph{Multiple Change
+#' Point Analysis: Fast Implementation and Strong Consistency}. IEEE
+#' Transactions on Signal Processing, vol. 65, no. 17, pp. 4495-4510, 2017.
 #' @param x The data to find change points.
 #' @param point_max The largest candidate number of change points.
 #' @param penalty Penalty term. Default is "bic".
 #' @param seg_min Minimal segment size, must be positive integer.
-#' @param num_init The number of repetition times, in order to avoid local minimal.
-#'                 Default is squared root of number of observations.
+#' @param num_init The number of repetition times, in order to avoid local
+#'   minimal. Default is squared root of number of observations.
 #'
 #' @usage ChangePoints(x,point_max=4,penalty=c("bic","aic","hq"),seg_min=2,
-#'       num_init="sqrt")
-#' @return A list with following elements:
-#'         num_change_point: optimal number of change points.
-#'         change_point: location of change points.
+#'   num_init="sqrt")
+#' @return A list with following elements: num_change_point: optimal number of
+#'   change points. change_point: location of change points.
 #' @export
 #' @examples
-#' a=matrix(rnorm(40,mean=-1,sd=1),nrow=20,ncol=2)
-#' b=matrix(rnorm(120,mean=0,sd=1),nrow=60,ncol=2)
-#' c=matrix(rnorm(40,mean=1,sd=1),nrow=20,ncol=2)
-#' x=rbind(a,b,c)
+#' a<-matrix(rnorm(40,mean=-1,sd=1),nrow=20,ncol=2)
+#' b<-matrix(rnorm(120,mean=0,sd=1),nrow=60,ncol=2)
+#' c<-matrix(rnorm(40,mean=1,sd=1),nrow=20,ncol=2)
+#' x<-rbind(a,b,c)
 #' ChangePoints(x,point_max=5)
 #' ChangePoints(x,point_max=5,penalty="hq")
 
@@ -120,10 +118,10 @@ ChangePoints <- function(x,point_max=5,penalty="bic",seg_min=1,num_init="sqrt"){
 #'         change_point: location of optimal change points.
 #' @export
 #' @examples
-#' a=matrix(rnorm(40,mean=-1,sd=1),nrow=20,ncol=2)
-#' b=matrix(rnorm(120,mean=0,sd=1),nrow=60,ncol=2)
-#' c=matrix(rnorm(40,mean=1,sd=1),nrow=20,ncol=2)
-#' x=rbind(a,b,c)
+#' a<-matrix(rnorm(40,mean=-1,sd=1),nrow=20,ncol=2)
+#' b<-matrix(rnorm(120,mean=0,sd=1),nrow=60,ncol=2)
+#' c<-matrix(rnorm(40,mean=1,sd=1),nrow=20,ncol=2)
+#' x<-rbind(a,b,c)
 #' OrderKmeans(x,K=3)
 #' OrderKmeans(x,K=3,num_init="sqrt")
 OrderKmeans <- function(x, K=4, num_init="sqrt") {

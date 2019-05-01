@@ -13,23 +13,23 @@
 #' @return x: The transformed data, which are the estimated coefficients of original data.
 #' @export
 #' @examples
-#' N = 1000
-#' N1 = floor(0.1*N)
-#' N2 = floor(0.3*N)
-#' a1 = c(0.8, -0.3); c1 = 0
-#' a2 = c(-0.5, 0.1); c2 = 0
-#' a3 = c(0.5, -0.5); c3 = 0
-#' y = rep(0,N)
-#' L=2
-#' y[1:L] = rnorm(L)
+#' N <- 1000
+#' N1 <- floor(0.1*N)
+#' N2 <- floor(0.3*N)
+#' a1 <- c(0.8, -0.3); c1 <- 0
+#' a2 <- c(-0.5, 0.1); c2 <- 0
+#' a3 <- c(0.5, -0.5); c3 <- 0
+#' y <- rep(0,N)
+#' L<-2
+#' y[1:L] <- rnorm(L)
 #' for (n in (L+1):N){
 #'   if (n <= N1) {
-#'     y[n] = y[(n-1):(n-L)] %*% a1 + c1 + rnorm(1)
+#'     y[n] <- y[(n-1):(n-L)] %*% a1 + c1 + rnorm(1)
 #'   } else if (n <= (N1+N2)) {
-#'     y[n] = y[(n-1):(n-L)] %*% a2 + c2 + rnorm(1)
+#'     y[n] <- y[(n-1):(n-L)] %*% a2 + c2 + rnorm(1)
 #'   }
 #'   else {
-#'     y[n] = y[(n-1):(n-L)] %*% a3 + c3 + rnorm(1)
+#'     y[n] <- y[(n-1):(n-L)] %*% a3 + c3 + rnorm(1)
 #'   }
 #' }
 #' GetMle(y,window_size=100)

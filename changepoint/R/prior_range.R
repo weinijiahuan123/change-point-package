@@ -24,13 +24,13 @@
 #' @export
 #'
 #' @examples
-#' a=matrix(rnorm(40,mean=-1,sd=1),nrow=20,ncol=2)
-#' b=matrix(rnorm(120,mean=0,sd=1),nrow=60,ncol=2)
-#' c=matrix(rnorm(40,mean=1,sd=1),nrow=20,ncol=2)
-#' x=rbind(a,b,c)
-#' l1=c(15,25)
-#' l2=c(75,100)
-#' prior_range_x=list(l1,l2)
+#' a<-matrix(rnorm(40,mean=-1,sd=1),nrow=20,ncol=2)
+#' b<-matrix(rnorm(120,mean=0,sd=1),nrow=60,ncol=2)
+#' c<-matrix(rnorm(40,mean=1,sd=1),nrow=20,ncol=2)
+#' x<-rbind(a,b,c)
+#' l1<-c(15,25)
+#' l2<-c(75,100)
+#' prior_range_x<-list(l1,l2)
 #' PriorRangeOrderKmeans(x,prior_range_x=list(l1,l2))
 PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
   if (class(x) != "matrix") {
