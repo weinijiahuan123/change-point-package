@@ -47,16 +47,8 @@ RangeToPoint<-function(y,n_peak_range,peak_range,get_loglik=GetLogLik) {
     #i=1
     #test
     #cat("i=",i,"\n_peak_range")
-    # Get the outer range to find the exact change point.
 
-#
-#     if (i == n_peak_range) {
-#       outer_range<-y[change_point[i]:len]
-#     } else {
-#       outer_range<-y[change_point[i]:(peak_range[[i+1]][1]-1)]
-#     }
-
-    # Fix following ranges and find the exact change point of range i with smallest quadratic loss.
+    # Fix following ranges and find the exact change point of range i with smallest log likelihood.
     for (e in 1:length(peak_range[[i]])) {
       #test
       #e=1
@@ -64,8 +56,7 @@ RangeToPoint<-function(y,n_peak_range,peak_range,get_loglik=GetLogLik) {
       left_part <- get_loglik(y, change_point[i]+1, peak_range[[i]][e])
       right_part <- get_loglik(y, peak_range[[i]][e]+1, change_point[i+2])
       log_lik <- left_part+right_part
-
-      if (log_lik < best_log_lik) {
+      if ((log_lik < best_log_lik) && (!is.null(left_part)) && (!is.null(right_part))) {
         best_log_lik <- log_lik
         change_point[i+1] <- peak_range[[i]][e]
       }
@@ -91,28 +82,25 @@ RangeToPoint<-function(y,n_peak_range,peak_range,get_loglik=GetLogLik) {
 #' @return log_lik
 #' @export
 #'
-#' @examples
-GetLogLik <- function(y, left, right) {
-  EstimateAr <- function(x,T1,T2,L){
-    if (T1 > (T2 - L)) {
-      warning("Error in estimate_ar")
-    }
-    if (T1 <= L) {
-      T1 <- L + 1
-    }
-    Y <- matrix(0, nrow=L+1, ncol=T2-T1+1)
-    Y[1,] <- 1
-    for (k in 1:L) {
-      Y[k+1, ] <- x[(T1-k):(T2-k)]
-    }
-    A <- Y%*%t(Y)
-    B <- Y%*%x[T1:T2]
-    C <- solve(A)%*%B
-    e <- x[T1:T2]-t(Y)%*%C
-    sigma2 <- sum(e^2)/(T2-T1+1)
-    est_coef <- list(C=C,sigma2=sigma2)
-    return(est_coef)
-  }
 
-  log_lik <- (right-left)*log(EstimateAr(y,left+1,right,2)$sigma2)
+GetLogLik <- function(y, left, right) {
+  L <- 2
+  if (left > (right - L)) {
+    # warning("lag is too large")
+    return(NULL)
+  }
+  if (left <= L) {
+    left <- L + 1
+  }
+  Y <- matrix(0, nrow=L+1, ncol=right-left+1)
+  Y[1,] <- 1
+  for (k in 1:L) {
+    Y[k+1, ] <- y[(left-k):(right-k)]
+  }
+  A <- Y%*%t(Y)
+  B <- Y%*%y[left:right]
+  C <- solve(A)%*%B
+  e <- y[left:right]-t(Y)%*%C
+  sigma2 <- sum(e^2)/(right-left+1)
+  log_lik <- (right-left)*log(sigma2)
 }
