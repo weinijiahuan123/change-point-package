@@ -17,8 +17,6 @@
 #' @param num_init The number of repetition times, in order to avoid local
 #'   minimal. Default is squared root of number of observations.
 #'
-#' @usage ChangePoints(x,point_max=5,penalty=c("bic","aic","hq"),seg_min=1,
-#'   num_init="sqrt")
 #' @return A list with following elements: num_change_point: optimal number of
 #'   change points. change_point: location of change points.
 #' @export

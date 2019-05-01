@@ -35,13 +35,6 @@
 #'   minimal. Default is squared root of number of transformed data.
 #' @param tolerance The tolerance level. The selected narrow ranges are with
 #'   score at least S-tolerance.
-#' @usage MultiWindow(y, window_list = c(100, 50, 20, 10, 5), point_max = 5,
-#'   prior_range = NULL, get_mle = GetMle, penalty=c("bic","aic","hq"), seg_min
-#'   = 1, num_init = "sqrt", tolerance = 1)
-#'
-#'   MultiWindow(y, window_list = c(100, 50, 20, 10, 5), prior_range =
-#'   prior_range=list(c(30,200),c(220,400)), get_mle = GetMle,
-#'   penalty=c("bic","aic","hq"), seg_min = 1, num_init = "sqrt", tolerance = 1)
 #' @return A list of following elements: n_peak_range: The number of peak ranges.
 #'   peak_ranges: The location of peak ranges.
 #' @export
