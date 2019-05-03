@@ -17,6 +17,7 @@
 #' @param prior_range_x The prior ranges that contain change points.
 #' @param num_init The number of repetition times, in order to avoid local minimal.
 #'                 Default is squared root of number of observations.
+#' @import stats
 #'
 #' @return A list contains following elements:
 #'         num_change_point: optimal number of change points.
@@ -70,12 +71,12 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
     change_point<-numeric(M)
     change_point[M]<-N
     for (i in 1:K) {
-      change_point[i]<-floor(prior_range_x[[i]][1]+(prior_range_x[[i]][2]-prior_range_x[[i]][1])*runif(1))
+      change_point[i]<-floor(prior_range_x[[i]][1]+(prior_range_x[[i]][2]-prior_range_x[[i]][1])*stats::runif(1))
     }
 
     # initialize for each segment the number of points, within segment sum of squares, and mean
     num_each[1] <- change_point[1]
-    wgss_each[1,] <- apply(matrix(x[1:change_point[1],],ncol=D),2,var) * (num_each[1]-1)
+    wgss_each[1,] <- apply(matrix(x[1:change_point[1],],ncol=D),2,stats::var) * (num_each[1]-1)
     if (num_each[1]==1) {
       wgss_each[1,]<-matrix(0,nrow=1,ncol=D)
     }
@@ -83,7 +84,7 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
 
     for (i in 2:M) {
       num_each[i] <- change_point[i] - change_point[i-1]
-      wgss_each[i,] <- apply(matrix(x[(change_point[i-1]+1):change_point[i],],ncol=D),2,var) * (num_each[i]-1)
+      wgss_each[i,] <- apply(matrix(x[(change_point[i-1]+1):change_point[i],],ncol=D),2,stats::var) * (num_each[i]-1)
       # special case: one segment only contains one number, avoid get NA for variance
       if (num_each[i]==1) {
         wgss_each[i,]<-matrix(0,nrow=1,ncol=D)
@@ -155,11 +156,11 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
 #        wgss_each[i,] <- wgss_each[i,] - best_decrease - wgss_part
 #        wgss_each[i+1,] <- wgss_each[i+1,] + best_increase + wgss_part
         if (i == 1) {
-          wgss_each[i, ] <- apply(matrix(x[1:change_point[i],],ncol=D),2,var) * (num_each[i]-1)
+          wgss_each[i, ] <- apply(matrix(x[1:change_point[i],],ncol=D),2,stats::var) * (num_each[i]-1)
         } else {
-          wgss_each[i,] <- apply(matrix(x[(change_point[i-1]+1):change_point[i],],ncol=D),2,var) * (num_each[i]-1)
+          wgss_each[i,] <- apply(matrix(x[(change_point[i-1]+1):change_point[i],],ncol=D),2,stats::var) * (num_each[i]-1)
         }
-        wgss_each[i+1,] <- apply(matrix(x[(change_point[i]+1):change_point[i+1],],ncol=D),2,var) * (num_each[i+1]-1)
+        wgss_each[i+1,] <- apply(matrix(x[(change_point[i]+1):change_point[i+1],],ncol=D),2,stats::var) * (num_each[i+1]-1)
         if (num_each[i]==1) {
           wgss_each[i,]<-matrix(0,nrow=num_each[i],ncol=D)
         }
@@ -222,11 +223,11 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
           #wgss_each[i,] <- wgss_each[i,] + best_decrease + wgss_part
           #wgss_each[i+1,] <- wgss_each[i+1,] - best_increase - wgss_part
           if (i == 1) {
-            wgss_each[i, ] <- apply(matrix(x[1:change_point[i],],ncol=D),2,var) * (num_each[i]-1)
+            wgss_each[i, ] <- apply(matrix(x[1:change_point[i],],ncol=D),2,stats::var) * (num_each[i]-1)
           } else {
-            wgss_each[i,] <- apply(matrix(x[(change_point[i-1]+1):change_point[i],],ncol=D),2,var) * (num_each[i]-1)
+            wgss_each[i,] <- apply(matrix(x[(change_point[i-1]+1):change_point[i],],ncol=D),2,stats::var) * (num_each[i]-1)
           }
-          wgss_each[i+1,] <- apply(matrix(x[(change_point[i]+1):change_point[i+1],],ncol=D),2,var) * (num_each[i+1]-1)
+          wgss_each[i+1,] <- apply(matrix(x[(change_point[i]+1):change_point[i+1],],ncol=D),2,stats::var) * (num_each[i+1]-1)
           if (num_each[i]==1) {
             wgss_each[i,]<-matrix(0,nrow=num_each[i],ncol=D)
           }

@@ -17,6 +17,7 @@
 #' @param num_init The number of repetition times, in order to avoid local
 #'   minimal. Default is squared root of number of observations.
 #'
+#' @import stats
 #' @return A list with following elements: num_change_point: optimal number of
 #'   change points. change_point: location of change points.
 #' @export
@@ -163,20 +164,20 @@ OrderKmeans <- function(x, K=4, num_init="sqrt") {
 
       # Initialize change points, add N-th observation as the last change point so
       # there are K+1 change points
-      change_point<-floor(1+(N-2)*runif(K))
+      change_point<-floor(1+(N-2)*stats::runif(K))
       change_point<-c(change_point,N)
       change_point<-unique(change_point)
 
       # make sure change points are unique
       while (length(change_point)<M) {
-        change_point<-c(change_point,floor(1+(N-2)*runif(1)))
+        change_point<-c(change_point,floor(1+(N-2)*stats::runif(1)))
         change_point<-unique(change_point)
       }
       change_point <- sort(change_point)
 
       # initialize for each segment the number of points, within segment sum of squares, and mean
       num_each[1] <- change_point[1]
-      wgss_each[1,] <- apply(matrix(x[1:change_point[1],],ncol=D),2,var) * (num_each[1]-1)
+      wgss_each[1,] <- apply(matrix(x[1:change_point[1],],ncol=D),2,stats::var) * (num_each[1]-1)
       if (num_each[1]==1) {
         wgss_each[1,]<-matrix(0,nrow=1,ncol=D)
       }
@@ -185,7 +186,7 @@ OrderKmeans <- function(x, K=4, num_init="sqrt") {
       for (i in 2:M) {
         #i=3
         num_each[i] <- change_point[i] - change_point[i-1]
-        wgss_each[i,] <- apply(matrix(x[(change_point[i-1]+1):change_point[i],],ncol=D),2,var) * (num_each[i]-1)
+        wgss_each[i,] <- apply(matrix(x[(change_point[i-1]+1):change_point[i],],ncol=D),2,stats::var) * (num_each[i]-1)
         # special case: one segment only contains one number, avoid get NA for variance
         if (num_each[i]==1) {
           wgss_each[i,]<-matrix(0,nrow=1,ncol=D)
@@ -256,11 +257,11 @@ OrderKmeans <- function(x, K=4, num_init="sqrt") {
           #wgss_each[i,] <- wgss_each[i,] - best_decrease - wgss_part
           #wgss_each[i+1,] <- wgss_each[i+1,] + best_increase + wgss_part
           if (i == 1) {
-            wgss_each[i, ] <- apply(matrix(x[1:change_point[i],],ncol=D),2,var) * (num_each[i]-1)
+            wgss_each[i, ] <- apply(matrix(x[1:change_point[i],],ncol=D),2,stats::var) * (num_each[i]-1)
           } else {
-            wgss_each[i,] <- apply(matrix(x[(change_point[i-1]+1):change_point[i],],ncol=D),2,var) * (num_each[i]-1)
+            wgss_each[i,] <- apply(matrix(x[(change_point[i-1]+1):change_point[i],],ncol=D),2,stats::var) * (num_each[i]-1)
           }
-          wgss_each[i+1,] <- apply(matrix(x[(change_point[i]+1):change_point[i+1],],ncol=D),2,var) * (num_each[i+1]-1)
+          wgss_each[i+1,] <- apply(matrix(x[(change_point[i]+1):change_point[i+1],],ncol=D),2,stats::var) * (num_each[i+1]-1)
           if (num_each[i]==1) {
             wgss_each[i,]<-matrix(0,nrow=num_each[i],ncol=D)
           }
@@ -320,11 +321,11 @@ OrderKmeans <- function(x, K=4, num_init="sqrt") {
             #wgss_each[i,] <- wgss_each[i,] + best_decrease + wgss_part
             #wgss_each[i+1,] <- wgss_each[i+1,] - best_increase - wgss_part
             if (i == 1) {
-              wgss_each[i, ] <- apply(matrix(x[1:change_point[i],],ncol=D),2,var) * (num_each[i]-1)
+              wgss_each[i, ] <- apply(matrix(x[1:change_point[i],],ncol=D),2,stats::var) * (num_each[i]-1)
             } else {
-              wgss_each[i,] <- apply(matrix(x[(change_point[i-1]+1):change_point[i],],ncol=D),2,var) * (num_each[i]-1)
+              wgss_each[i,] <- apply(matrix(x[(change_point[i-1]+1):change_point[i],],ncol=D),2,stats::var) * (num_each[i]-1)
             }
-            wgss_each[i+1,] <- apply(matrix(x[(change_point[i]+1):change_point[i+1],],ncol=D),2,var) * (num_each[i+1]-1)
+            wgss_each[i+1,] <- apply(matrix(x[(change_point[i]+1):change_point[i+1],],ncol=D),2,stats::var) * (num_each[i+1]-1)
             if (num_each[i]==1) {
               wgss_each[i,]<-matrix(0,nrow=num_each[i],ncol=D)
             }
