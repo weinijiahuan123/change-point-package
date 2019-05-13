@@ -16,12 +16,12 @@
 #' @param x The data to find change points.
 #' @param prior_range_x The prior ranges that contain change points.
 #' @param num_init The number of repetition times, in order to avoid local minimal.
-#'                 Default is squared root of number of observations.
+#'                 Default is squared root of number of observations. Must be integer.
 #' @import stats
 #'
-#' @return A list contains following elements:
-#'         num_change_point: optimal number of change points.
-#'         change_point: location of change points.
+#' @return
+#'         \item{num_change_point}{optimal number of change points.}
+#'         \item{change_point}{location of change points.}
 #' @export
 #'
 #' @examples
@@ -33,7 +33,7 @@
 #' l2<-c(75,100)
 #' prior_range_x<-list(l1,l2)
 #' PriorRangeOrderKmeans(x,prior_range_x=list(l1,l2))
-PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
+PriorRangeOrderKmeans<-function(x,prior_range_x,num_init=NULL) {
   if (class(x) != "matrix") {
     stop("Dataset must be matrix form!")
   }
@@ -53,8 +53,8 @@ PriorRangeOrderKmeans<-function(x,prior_range_x,num_init="sqrt") {
   # randomize initial change points several times to avoid local optima
   best_wgss<-Inf
   # set the random initialization times
-  if (num_init == "sqrt") {
-    num_init <- sqrt(dim(x)[1])
+  if (is.null(num_init)) {
+    num_init <- floor(sqrt(dim(x)[1]))
   }
   for (j in 1:num_init) {
     #test

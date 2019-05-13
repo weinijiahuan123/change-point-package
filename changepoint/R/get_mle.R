@@ -10,7 +10,8 @@
 #' @param y The original data to find change points.
 #' @param window_size The number of observations each window contains.
 #' @import stats
-#' @return x: The transformed data, which are the estimated coefficients of original data.
+#' @return
+#'   \item{x}{The transformed data, which are the estimated coefficients of original data.}
 #' @export
 #' @examples
 #' N <- 1000
@@ -85,7 +86,8 @@ GetMle<- function(y, window_size) {
 #' @param y The original data to find change points.
 #' @param window_size The number of observations each window contains.
 #'
-#' @return x: The transformed data, which are the estimated coefficients of original data.
+#' @return
+#'   \item{x}{The transformed data, which are the estimated coefficients of original data.}
 #' @export
 #' @examples
 #' N = 1000

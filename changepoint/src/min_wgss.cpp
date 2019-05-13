@@ -33,7 +33,7 @@ NumericVector VarCpp(NumericMatrix x){
 }
 // [[Rcpp::export]]
 
-List OrderKmeansCppCore(NumericMatrix x, int K=4, int num_init=10) {
+List OrderKmeansCpp(NumericMatrix x, int K=4, int num_init=10) {
   if (!Rf_isMatrix(x)) {
     stop("Dataset must be matrix form!");
   }
